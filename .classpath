@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/akka-actor-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-kernel-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-remote-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/arpack_combined_all.jar"/>
+	<classpathentry kind="lib" path="lib/colormaps.jar"/>
+	<classpathentry kind="lib" path="lib/commons-compress-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/guava-r06.jar"/>
+	<classpathentry kind="lib" path="lib/im-scala-canvas3d.jar"/>
+	<classpathentry kind="lib" path="lib/im-scala-swing.jar"/>
+	<classpathentry kind="lib" path="lib/j3dcore.jar"/>
+	<classpathentry kind="lib" path="lib/j3dutils.jar"/>
+	<classpathentry kind="lib" path="lib/jai_codec.jar"/>
+	<classpathentry kind="lib" path="lib/jai_core.jar"/>
+	<classpathentry kind="lib" path="lib/jgrapht-jdk1.6.jar" sourcepath="/home/harveywi/jars/jgrapht_src.zip.zip"/>
+	<classpathentry kind="lib" path="lib/jline.jar"/>
+	<classpathentry kind="lib" path="lib/Jmol.jar"/>
+	<classpathentry kind="lib" path="lib/mtj-0.9.12.jar"/>
+	<classpathentry kind="lib" path="lib/MultiSplit.jar"/>
+	<classpathentry kind="lib" path="lib/netlib-java-0.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/netty-3.3.0.Final.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/reactive-core.jar"/>
+	<classpathentry kind="lib" path="lib/scalacl-0.2-shaded.jar"/>
+	<classpathentry kind="lib" path="lib/scalala_2.9.1-1.0.0.RC3-SNAPSHOT.min.jar"/>
+	<classpathentry kind="lib" path="lib/scopt_2.9.1-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/vecmath.jar"/>
+	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
