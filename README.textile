@@ -69,7 +69,40 @@ datasets_root_dir
 
 where values marked with an asterisk must be named exactly as shown.
 
+h4. Scalar Function Files
+
+In order to use Ayla, you must have one or more scalar function defined over the conformations (i.e. a scalar function assigns a real number to each conformation).  Some simple examples of scalar functions include potential energy, contact density, compactness, and radius of gyration.  Concretely, this means that if you have 20,000 PDB files, then you must have a text file containing 20,000 lines where each line is a floating-point number.  The correspondence between numbers and PDB files is established by the @conformation_filenames.txt@ or @conformation_zip_paths.txt@ files.
+
+Assuming that you have stored the function values in a text file called @my_function.txt@, copy it into the @scalar_functions@ directory.  If you have additional scalar function text files, you can copy those into the @scalar_functions@ directory as well.
+
+h3. Dataset Preprocessing
+
+h4. The @pointCloudMaker@ Utility
+
+The first preprocessing step is to use the @pointCloudMaker@ utility to convert your PDB files into a cloud of points in a high-dimensional Euclidean space.  The idea is that, if two conformations are structurally similar, then they will map to points which are closer, and vice versa.  Usage of the @pointCloudMaker@ utility is as follows:
+
+@pointCloudMaker.sh my_first_dataset@
+
+This program will generate a file in @my_first_dataset@ called @pcd_v3.dat@ which contains the point representations of your conformations.
+
+h4. The @domainApproximator@ Utility
+
+The second step in preprocessing is to (optionally) filter out conformations which are uninteresting (or equivalently, select a subset of conformations which are particularly interesting) and approximate their putative conformational manifold structure by assembling a proximity graph.  The @domainApproximator@ utility performs these tasks.  Usage is as follows:
+
+bc.
+Usage:  domainApproximator [-w whitelist | -b blacklist] k dataset_dir outputFunctionName
+The -w option will keep the conformations in the given whitelist text file and ignore all others.
+The -b option will discard the conformations in the given blacklist text file and ignore all others.
+k is the number of nearest neighbors that are used when reconstructing the domain.
+dataset_dir is the directory of the Ayla dataset.
+
+The @-w@ and @-b@ options allow you to specify a whitelist (or blacklist) text file in which each line is the absolute (zip) path to a whitelisted (or blacklisted) conformation.
+
+The @-k@ parameter should be set to something small.  Usually a value somewhere between 10 and 20 is sufficient.
+
 h2. Running the Ayla Server
+
+Assuming that you have generated one or more datasets using the above instructions, you should be ready to (1) launch the Ayla server, then (2) launch one or more Ayla clients.
 
 To run the Ayla server, use the @aylaServer@ command.  Usage is as follows:
 
