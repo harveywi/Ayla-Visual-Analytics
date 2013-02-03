@@ -79,7 +79,7 @@ class CachedDataset(
 }
 
 object CachedDataset {
-  import ayla.util.Tools._
+  import ayla.util.tools._
 
   private[this] def getTextFilesRecursively(f: File): Array[File] = {
     val (dirs, nonDirs) = f.listFiles.partition(_.isDirectory)

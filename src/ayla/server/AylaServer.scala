@@ -11,7 +11,6 @@ package ayla.server
 import scalaz.{ Validation, Success, Failure }
 import scalaz.Validation._
 import java.io._
-import ayla.util.Tools._
 import ayla.dataset.CachedDataset
 import akka.actor.ActorSystem
 import akka.actor.Props

@@ -113,7 +113,7 @@ trait PdbStreamProvider extends Iterable[String] {
 
 object PdbStreamProvider {
   def apply(datasetDir: File): Validation[String, PdbStreamProvider] = {
-    import ayla.util.Tools._
+    import ayla.util.tools._
     implicit val dDir = datasetDir
     
     def catchException[T](op: => T, errorMsg: String = "An error occurred") = fromTryCatch(op).fail.map(e => s"$errorMsg:  ${e.getMessage}").validation

@@ -16,7 +16,7 @@ import ayla.dataset.CachedDataset
 import scalaz.{ Validation, Success, Failure }
 import scalaz.Validation._
 import org.apache.commons.compress.archivers.zip.ZipFile
-import ayla.util.Tools._
+import ayla.util.tools._
 import ayla.util.Timing
 import ayla.geometry.NearestNeighborSearcher
 import ayla.geometry.SimplicialComplex
