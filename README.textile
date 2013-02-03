@@ -10,14 +10,32 @@ Ayla features a rich visual analytics environment in which many researchers can 
 
 h4. Binary Files
 
-The latest stable version of Ayla is 0.1, and binares are available at
-"the Ayla website":http://www.cse.ohio-state.edu/~harveywi/ayla .
+The "Ayla website":http://www.cse.ohio-state.edu/~harveywi/ayla hosts the
+latest binaries (currently version 0.1) as well as a screencast demonstrating
+the functionality of the software.
 
 h4. Source Code
 
-TODO
+See the "Ayla Github
+repository":https://github.com/harveywi/Ayla-Visual-Analytics for source code
+and additional documentation.
+
+h4. Prerequisites
+
+The software is written in "Scala":http://www.scala-lang.org and "Oracle Java
+Version 6+":http://www.oracle.com/technetwork/java/javase/downloads/index.html
+must be installed to run the binaries.  Processing large datasets (on the
+order of hundreds of thousands of protein conformations) can be
+memory-intensive; hence we recommend running the software on a machine with 8
+GB of RAM or more.  (As the software matures, it will become faster and
+leaner.)
 
 h3. Creating an Ayla Dataset
+
+h4. Directory structure
+
+bc. puts "This style (notice the single dot) stops at the first blank line."
+puts "This is the second line of code."
 
 TODO say something about example dataset.
 
