@@ -41,6 +41,8 @@ import ayla.client.ui.JmolPanel
 import javax.media.j3d._
 import com.sun.j3d.utils.geometry.Sphere
 import ayla.client.ui.ColorSchemes.scheme
+import ayla.client.ui.reactive.SwingStream
+import reactive._
 
 class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) extends BorderPanel {
   var floorplan: VoronoiFloorplan = null
@@ -74,7 +76,7 @@ class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) e
     }
   }
 
-  val controlPanel = new BorderPanel {
+  val controlPanel = new BorderPanel with Observing {
     var movieIdx = -1
     var activeAnnotation: ConformationAnnotation = null
     background = scheme.bgColor
@@ -84,13 +86,17 @@ class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) e
       foreground = scheme.btnForeground
 
       // back
-      contents += new Button {
+      contents += new Button with SwingStream {
         background = scheme.btnBackground
         foreground = scheme.btnForeground
         icon = backIcon
         this.borderPainted = false
-        reactions += {
-          case e: ButtonClicked => {
+        //        reactions += {
+        //          case e: ButtonClicked => 
+        //        }
+        val y = identity[Int] _
+        swingEvents.collect{case e: ButtonClicked => e}.foreach{e => 
+         
             val annotations = storyboardEditor.contents.flatMap {
               _ match {
                 case area: AnnotationArea => Some(area.annotation)
@@ -116,7 +122,6 @@ class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) e
             }
             collabFrame.annotationListView.repaint()
             storyboardEditor.repaint()
-          }
         }
       }
 
@@ -407,22 +412,22 @@ class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) e
               }
               return lenSq;
             }
-            
-//            AylaClient.ct.
-            
+
+            //            AylaClient.ct.
+
             val ctShortestPathVerts = {
               val ctGraph = new SimpleGraph[Int, DefaultEdge](classOf[DefaultEdge])
-	            val ct = client.ct
-	            ct.nodesAugmented.foreach(n => ctGraph.addVertex(n.vertex))
-	            ct.nodesAugmented.foreach{n =>
-	              n.parents.foreach{parent =>
-	                ctGraph.addEdge(n.vertex, parent.vertex)
-	              }
-	            }
+              val ct = client.ct
+              ct.nodesAugmented.foreach(n => ctGraph.addVertex(n.vertex))
+              ct.nodesAugmented.foreach { n =>
+                n.parents.foreach { parent =>
+                  ctGraph.addEdge(n.vertex, parent.vertex)
+                }
+              }
               val dsp = new DijkstraShortestPath(ctGraph, leftJmolPalette.annotation.sampledConformationID, rightJmolPalette.annotation.sampledConformationID)
               val verts = new scala.collection.mutable.ArrayBuffer[Int]
               verts += leftJmolPalette.annotation.sampledConformationID
-              dsp.getPathEdgeList().asScala.foreach{e =>
+              dsp.getPathEdgeList().asScala.foreach { e =>
                 val v1 = ctGraph.getEdgeSource(e)
                 val v2 = ctGraph.getEdgeTarget(e)
                 if (verts.last == v1) {
@@ -433,8 +438,7 @@ class StoryboardPanel(client: AylaClient, collabFrame: AylaCollaborationFrame) e
               }
               verts.toSet
             }
-            
-            
+
             val shortestPathVerts = client.getDomainShortestPath(leftJmolPalette.annotation.sampledConformationID, rightJmolPalette.annotation.sampledConformationID).filter(ctShortestPathVerts.contains(_))
             //            println("Got shortest path verts:  " + allShortestPathVerts.mkString(","))
             //            val shortestPathVerts = allShortestPathVerts.filter{v =>

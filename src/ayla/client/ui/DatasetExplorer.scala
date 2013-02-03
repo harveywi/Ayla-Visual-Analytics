@@ -39,43 +39,20 @@ import ayla.geometry.ct.ContourTree
 import ayla.geometry.ct.ContourTreeEdge
 import ayla.dataset.CachedDataset
 import ayla.client.ui.desktop.DesktopPane
-import ayla.client.ui.event.ColormapUpdate
-import ayla.client.ui.event.ContourTreeReady
-import ayla.client.ui.event.PointCloudViewUpdated
-import ayla.client.ui.event.RingMenuUpdate
-import ayla.client.ui.event.SelectionUpdated
-import ayla.client.ui.event.SetCameraEvent
-import ayla.client.ui.event.TriangulatedPointCloudViewUpdated
+import ayla.client.ui.event._
 import ayla.client.ui.menu._
 import ayla.geometry.ScalarFunction
-import javax.media.j3d.Appearance
-import javax.media.j3d.BranchGroup
-import javax.media.j3d.Canvas3D
-import javax.media.j3d.GeometryArray
-import javax.media.j3d.GraphicsConfigTemplate3D
-import javax.media.j3d.PointArray
-import javax.media.j3d.PointAttributes
-import javax.media.j3d.Shape3D
-import javax.media.j3d.IndexedTriangleArray
-import javax.media.j3d.Transform3D
+import javax.media.j3d._
 import javax.swing.JLayeredPane
 import javax.swing.OverlayLayout
 import javax.swing.UIManager
-import javax.vecmath.Color4f
-import javax.vecmath.Point2d
-import javax.vecmath.Point3d
-import javax.vecmath.Point3f
-import javax.vecmath.Vector3d
+import javax.vecmath._
 import scala.io.Source
 import ayla.util.Timing
 import scala.sys.process.Process
 import ayla.util.IO._
 import javax.vecmath.Color3f
 import java.awt.BorderLayout
-import javax.media.j3d.ColoringAttributes
-import javax.media.j3d.PolygonAttributes
-import javax.media.j3d.Material
-import javax.media.j3d.AmbientLight
 import ayla.server.CollaborationProject
 import scala.collection.mutable.SynchronizedSet
 import ayla.geometry.ct.ContourTreeNode
@@ -86,57 +63,24 @@ import ayla.colormap._
 object DatasetExplorer extends SimpleSwingApplication {
   var stateManager: StateManager = null
 
-  def launch(ct: ContourTree, nodeAtInfinity: ContourTreeNode, dataset: AylaClientCachedDataset): Unit = {
-//    HexProgressMonitor2.runTasks("Launching Dataset Explorer") { hpMon =>
-//
-//      hpMon.add2("initializing state manager") {
-//        stateManager = new StateManager(dataset, ct.scalarFunction, ct, nodeAtInfinity, conformationalSpacePanel)
-//        stateManager.tcManager = tcManager
-//        stateManager.terrainPanel = terrainPanel
-//        stateManager.contourTreePanel = contourTreePanel
-//        stateManager.pointCloudView = pointCloudView
-//
-//        conformationalSpacePanel.stateManager = stateManager
-//        conformationalSpacePanel.dataset = dataset
-//        desktopPane.listenTo(dataset.client)
-//
-//        dataset.client.collabFrame.storyboardPanel.desktopPane = desktopPane
-//
-//        terrainPanel.listenTo(dataset.client.collabFrame.storyboardPanel)
-//        desktopPane.listenTo(dataset.client.collabFrame)
-//        dataset.client.collabFrame.storyboardPanel.listenTo(terrainPanel)
-//        desktopPane.listenTo(terrainPanel)
-//        dataset.client.collabFrame.visible = true
-//      }
-//
-//      hpMon.add2("Wiff") {
-//        dataset.client.refreshAnnotationList()
-//      }
-//
-//      hpMon.add2("Waff") {
-//        dataset.client.refreshStoryboardList()
-//      }
-//    }
-    
-        stateManager = new StateManager(dataset, ct.scalarFunction, ct, nodeAtInfinity, conformationalSpacePanel)
-        stateManager.tcManager = tcManager
-        stateManager.terrainPanel = terrainPanel
-        stateManager.contourTreePanel = contourTreePanel
-        stateManager.pointCloudView = pointCloudView
+  def apply(ct: ContourTree, nodeAtInfinity: ContourTreeNode, dataset: AylaClientCachedDataset): Unit = {
+    stateManager = new StateManager(dataset, ct.scalarFunction, ct, nodeAtInfinity, conformationalSpacePanel)
+    stateManager.tcManager = tcManager
+    stateManager.terrainPanel = terrainPanel
+    stateManager.contourTreePanel = contourTreePanel
+    stateManager.pointCloudView = pointCloudView
 
-        conformationalSpacePanel.stateManager = stateManager
-        conformationalSpacePanel.dataset = dataset
-        desktopPane.listenTo(dataset.client)
+    conformationalSpacePanel.stateManager = stateManager
+    conformationalSpacePanel.dataset = dataset
+    desktopPane.listenTo(dataset.client)
 
-        dataset.client.collabFrame.storyboardPanel.desktopPane = desktopPane
+    dataset.client.collabFrame.storyboardPanel.desktopPane = desktopPane
 
-        terrainPanel.listenTo(dataset.client.collabFrame.storyboardPanel)
-        desktopPane.listenTo(dataset.client.collabFrame)
-        dataset.client.collabFrame.storyboardPanel.listenTo(terrainPanel)
-        desktopPane.listenTo(terrainPanel)
-        dataset.client.collabFrame.visible = true
-        
-        
+    terrainPanel.listenTo(dataset.client.collabFrame.storyboardPanel)
+    desktopPane.listenTo(dataset.client.collabFrame)
+    dataset.client.collabFrame.storyboardPanel.listenTo(terrainPanel)
+    desktopPane.listenTo(terrainPanel)
+    dataset.client.collabFrame.visible = true
 
     super.main(Array.empty[String])
   }
@@ -164,17 +108,17 @@ object DatasetExplorer extends SimpleSwingApplication {
     stateManager.listenTo(ringMenu)
 
     terrainPanel.listenTo(stateManager)
-    terrainPanel.listenTo(tcManager)
     contourTreePanel.listenTo(stateManager)
     pointCloudView.listenTo(stateManager)
     tcManager.listenTo(stateManager)
-
-    ringMenu.reactions(new RingMenuUpdate(stateManager.awaitTauOrColorFuncMenu))
-
     ringMenu.listenTo(stateManager)
+    
+    ringMenu.reactions(new RingMenuUpdate(stateManager.awaitTauOrColorFuncMenu))
+    
+    terrainPanel.listenTo(tcManager)
 
     layeredPane.add(ringMenu.peer, JLayeredPane.MODAL_LAYER)
-
+    
     stateManager.publish(new ContourTreeReady(stateManager.ctSimp))
     stateManager.publish(new ColormapUpdate(stateManager.colormapGenerator(stateManager.colorFunction), stateManager.colorFunction))
   }
@@ -282,7 +226,7 @@ object DatasetExplorer extends SimpleSwingApplication {
       }
     }
   }
-  
+
   val desktopPane = new DesktopPane(terrainPanel)
 
   val contourTreePanel = new ContourTreePanel(new Canvas3D(GraphicsEnvironment.getLocalGraphicsEnvironment.getDefaultScreenDevice.getBestConfiguration {

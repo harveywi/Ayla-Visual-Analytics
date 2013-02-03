@@ -61,7 +61,7 @@ case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[
     val dataset = new AylaClientCachedDataset(client, dsspOutput, scalarArrays)
     println("Dataset:  " + dataset)
 //    
-    DatasetExplorer.launch(client.ct, nodeAtInfinity, dataset)
+    DatasetExplorer(client.ct, nodeAtInfinity, dataset)
     
     client.clientActor ! RefreshChatLogRequest(client.userName)
     client.clientActor ! RefreshAnnotationsRequest(client.userName)

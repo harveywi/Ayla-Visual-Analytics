@@ -15,6 +15,9 @@ import javax.swing.BorderFactory
 import scala.swing.event._
 import java.io.File
 import ayla.client.ui.state.UIState
+import java.net.Socket
+import java.net.InetAddress
+import java.net.ConnectException
 
 class LoginDialog extends Dialog with ColorSchemed {
   var result: Option[LoginInfo] = None
@@ -50,21 +53,30 @@ class LoginDialog extends Dialog with ColorSchemed {
         prefs.put("username", usernameTextField.text)
         prefs.put("cacheDir", cacheDirTextField.text)
 
-        // Make sure cache directory exists
-        val cacheDir = new File(cacheDirTextField.text)
-        if (!cacheDir.exists) {
-          Dialog.showConfirmation(null, "The specified cache directory does not exist.  Would you like me to create it?", "Cache Directory Not Found") match {
-            case Dialog.Result.Yes =>
-              cacheDir.mkdirs()
-              result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir))
-              close()
+        // Make sure internet address/socket is reachable
+        try {
+          val ia = InetAddress.getByName(serverTextField.text)
+          val socket = new Socket(ia, 9010)
 
-            case Dialog.Result.No => /* Do nothing */
+          // Make sure cache directory exists
+          val cacheDir = new File(cacheDirTextField.text)
+          if (!cacheDir.exists) {
+            Dialog.showConfirmation(null, "The specified cache directory does not exist.  Would you like me to create it?", "Cache Directory Not Found") match {
+              case Dialog.Result.Yes =>
+                cacheDir.mkdirs()
+                result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir, socket))
+                close()
+
+              case Dialog.Result.No => /* Do nothing */
+            }
+          } else {
+            // Cache found
+            result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir, socket))
+            close()
           }
-        } else {
-          // Cache found
-          result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir))
-          close()
+        } catch {
+          case e: ConnectException =>
+            Dialog.showMessage(message = s"Unable to connect to server ${serverTextField.text} on port 9010.", title = "Connection Refused")
         }
     }
   }
@@ -114,7 +126,7 @@ class LoginDialog extends Dialog with ColorSchemed {
 
 }
 
-case class LoginInfo(val server: String, val username: String, val cacheDir: File)
+case class LoginInfo(val server: String, val username: String, val cacheDir: File, val socket: Socket)
 
 object LoginDialog {
   def main(args: Array[String]): Unit = {

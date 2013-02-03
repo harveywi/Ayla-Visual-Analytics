@@ -105,20 +105,6 @@ class DesktopPane(val terrainPanel: TerrainPanel) extends InternalDesktopPane {
         }
       }
     }
-
-    // TODO
-    //    case ConformationPointClicked(conformationID, pdbLines) => {
-    //      val newJmolPalette = new JmolPalette(this, pdbLines, conformationID)
-    //      listenTo(newJmolPalette)
-    //      javax.swing.ToolTipManager.sharedInstance.setLightWeightPopupEnabled(false)
-    //      jmolPalettes += newJmolPalette
-    //      layout(newJmolPalette) = new LayerConstraints(layer = 3)
-    //      setupLayeredPane
-    //    }
-    //    case e: JmolPaletteMoved => {
-    //      if (e.src != this)localhost
-    //      publish(new JmolPaletteMoved(this, e.conformationID, e.newLocation))
-    //    }
   }
   
     def get3dTo2dPoint(point3d: Point3d): Point2d = {

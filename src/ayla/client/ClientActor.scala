@@ -23,11 +23,12 @@ class ClientActor(aylaClient: AylaClient) extends Actor {
 
   def receive = {
     case loginInfo: LoginInfo =>
-      val ia = InetAddress.getByName(loginInfo.server)
-      val socket = new Socket(ia, 9010)
-      out = new ObjectOutputStream(new DataOutputStream(socket.getOutputStream()))
+//	      val ia = InetAddress.getByName(loginInfo.server)
+//	      val socket = new Socket(ia, 9010)
       
-      in = new ObjectInputStream(socket.getInputStream())
+      out = new ObjectOutputStream(new DataOutputStream(loginInfo.socket.getOutputStream()))
+      
+      in = new ObjectInputStream(loginInfo.socket.getInputStream())
       val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
       out.writeObject(ClientConnectRequest(loginInfo.username))
       out.flush

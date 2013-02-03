@@ -60,25 +60,6 @@ class StateManager(val dataset: Dataset, val morseFunction: ScalarFunction, val 
 
   val menuRoot = new RingMenuItem("Root")
 
-  /*
-  val menuSetInfinityLow = new RingMenuItem("Set Infinity (Low)") {
-    override def handleClick(progressListener: RingMenuProgressListener) = {
-      progressListener.postProgress("Constructing terrain", -1)
-      val rootEdge = tcManager.componentMap.find(p => p._2.selectionStatus != 0).get._1
-      val pointAtInfinity = if (morseFunction.vc.compare(rootEdge.n1.vertex, rootEdge.n2.vertex) < 0) rootEdge.n1 else rootEdge.n2
-      StateManager.this.publish(new RegenerateTerrainEvent(ctSimp, pointAtInfinity))
-    }
-  }
-  val menuSetInfinityHigh = new RingMenuItem("Set Infinity (High)") {
-    override def handleClick(progressListener: RingMenuProgressListener) = {
-      progressListener.postProgress("Constructing terrain", -1)
-      val rootEdge = tcManager.componentMap.find(p => p._2.selectionStatus != 0).get._1
-      val pointAtInfinity = if (morseFunction.vc.compare(rootEdge.n1.vertex, rootEdge.n2.vertex) < 0) rootEdge.n2 else rootEdge.n1
-      StateManager.this.publish(new RegenerateTerrainEvent(ctSimp, pointAtInfinity))
-    }
-  }
-  */
-
   val menuLookAt = new RingMenuItem("Look At") {
     override def handleClick(progressListener: RingMenuProgressListener) = {
       // Get the selection
@@ -128,11 +109,7 @@ class StateManager(val dataset: Dataset, val morseFunction: ScalarFunction, val 
       cy /= pcdCoords.size.toDouble
       cz /= pcdCoords.size.toDouble
 
-      //							pointCloudView.reactions(new SetCameraEvent(new Point3d(cx, cy, cz), 1d))
       pointCloudView.reactions(new SetCameraEvent(new Point3d(cx, cy, cz), 1d))
-      //      triangulatedPointCloudView.reactions(new SetCameraEvent(new Point3d(cx, cy, 0), 1d))
-      //      pointCloudView.reactions(new SetCameraEvent(new Point3d(pcdCoords(0)(0), pcdCoords(0)(1), pcdCoords(0)(2)), 1d))
-      //      triangulatedPointCloudView.reactions(new SetCameraEvent(new Point3d(pcdCoords(0)(0), pcdCoords(0)(1), pcdCoords(0)(2)), 1d))
     }
   }
 

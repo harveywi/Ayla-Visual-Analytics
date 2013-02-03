@@ -202,7 +202,6 @@ class AylaServer(val datasetsRootDir: File) {
     }
     return stdDev
   }
-
 }
 
 object AylaServer {

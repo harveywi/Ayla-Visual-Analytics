@@ -45,6 +45,7 @@ import scala.collection.immutable.NumericRange
 import ayla.client.ui.event.PathReady
 import ayla.j3d.MySJCanvas3D
 import ayla.colormap._
+import reactive._
 
 class TerrainPanel(additionalPostRenderMethod: Canvas3D => Unit) extends MySJCanvas3D(new GraphicsConfigTemplate3D {
   setSceneAntialiasing(GraphicsConfigTemplate.REQUIRED)
@@ -259,85 +260,6 @@ class TerrainPanel(additionalPostRenderMethod: Canvas3D => Unit) extends MySJCan
         BSPTreeEnsemble(ct, pointAtInfinity)
       }
 
-      /*
-			val w = 2000
-			val h = 2000
-			val img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR)
-			val g2d = img.createGraphics()
-			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-			
-			val ctLayout = ContourTree2DLayout(bspEnsemble, ct)
-			val stack = new scala.collection.mutable.Stack[FloorplanElem[NumericRange[Double]]]
-			stack.pushAll(ctLayout.rootElems)
-			
-			ctLayout.rootElems.foreach(root => {
-				val fOuter = ct.scalarFunction.getFuncVal(root.bspNode.outerNode.vertex)
-				
-				val x1 = root.contour.start / 100.0 * w
-				val x2 = root.contour.end / 100.0 * w
-				
-				val x = (x1 + x2) / 2.0
-				
-				val y1 = h - (fOuter - ct.scalarFunction.minFuncVal) / ct.scalarFunction.rangeFuncVal * h
-				
-				g2d.setColor(new Color(128, 0, 0, 128))
-				g2d.fillOval(x.toInt-3, y1.toInt-3, 7, 7)
-				
-				
-			})
-			
-			while (!stack.isEmpty) {
-				val floorplanElem = stack.pop
-				val fOuter = ct.scalarFunction.getFuncVal(floorplanElem.bspNode.outerNode.vertex)
-				val fInner = ct.scalarFunction.getFuncVal(floorplanElem.bspNode.innerNode.vertex)
-				
-				val x1 = floorplanElem.contour.start / 100.0 * w
-				val x2 = floorplanElem.contour.end / 100.0 * w
-				
-				val x = (x1 + x2) / 2.0
-				
-				val y1 = h - (fOuter - ct.scalarFunction.minFuncVal) / ct.scalarFunction.rangeFuncVal * h
-				val y2 = h - (fInner - ct.scalarFunction.minFuncVal) / ct.scalarFunction.rangeFuncVal * h
-				
-				// Draw line from outer critical point to inner critical point
-				g2d.setColor(new Color(0, 255, 0, 128))
-//				g2d.draw(curve)
-				g2d.drawLine(x.toInt, y1.toInt, x.toInt, y2.toInt)
-				
-				// Draw noncritical points
-				floorplanElem.bspNode.ctEdge.noncriticalNodes.foreach(ncNode => {
-					val f = ct.scalarFunction.getFuncVal(ncNode.vertex)
-					val y = h - (f - ct.scalarFunction.minFuncVal) / ct.scalarFunction.rangeFuncVal * h
-					val c = new Color(Color.orange.getRed, Color.orange.getGreen, Color.orange.getBlue, 128)
-					g2d.setColor(c)
-					g2d.fillOval(x.toInt-3, y.toInt-3, 7, 7)
-				})
-				
-				// Draw lines from inner critical point to each child's outer critical point
-				floorplanElem.children.foreach(child => {
-					val fc = ct.scalarFunction.getFuncVal(child.bspNode.outerNode.vertex)
-					val x1c = child.contour.start / 100.0 * w
-					val x2c = child.contour.end / 100.0 * w
-					val yc = h - (fc - ct.scalarFunction.minFuncVal) / ct.scalarFunction.rangeFuncVal * h
-					val xc = (x1c + x2c) / 2.0
-					
-//					val curve = new CubicCurve2D.Double(x, y, x, (y + yc) / 2.0, xc, (y + yc) / 2.0, xc, yc)
-					
-					g2d.setColor(new Color(0, 255, 0, 128))
-//					g2d.draw(curve)
-					g2d.drawLine(x.toInt, y2.toInt, xc.toInt, yc.toInt)
-					
-				})
-				
-				g2d.setColor(new Color(0, 0, 128, 128))
-				g2d.fillOval(x.toInt-3, y2.toInt-3, 7, 7)
-				
-				stack.pushAll(floorplanElem.children)
-			}
-			JAI.create("filestore", img, "/dev/shm/ct.png", "PNG")
-			*/
-
-      //			val floorplan = SliceAndDiceFloorplan(bspEnsemble, ct, 11, edgeColorMap)
       floorplan = VoronoiFloorplan(bspEnsemble, ct, pctChange = .01d /*, epsilon=1e-2, delta=1e-99, pctChange=1d*/ )
       updateScene(ct, floorplan)
 
@@ -520,9 +442,16 @@ class TerrainPanel(additionalPostRenderMethod: Canvas3D => Unit) extends MySJCan
     simpleUniverse.addBranchGraph(objRoot)
 
   }
+  
+//  object EventStreams {
+//    val 
+//  }
+  
 }
 
 object TerrainPanel {
 }
 
-case class RegenerateTerrainEvent(val ct: ContourTree, val nodeAtInfinity: ContourTreeNode) extends Event
+case class RegenerateTerrainEvent(val ct: ContourTree, val nodeAtInfinity: ContourTreeNode) extends Event {
+  println("RegenerateTerrainEvent instantiated")
+}
