@@ -2,46 +2,95 @@ h1. Ayla Visual Analytics
 
 http://www.cse.ohio-state.edu/~harveywi/ayla
 
-h3. Introduction
+h2. Introduction
 
 Ayla is a free, open source visualization tool for researchers in biochemistry, molecular dynamics, and protein folding. It is cross-platform, running on Windows, Mac OS X, and Linux systems.
 
 Ayla features a rich visual analytics environment in which many researchers can work together. A storyboard metaphor is used to organize interesting events in the data. 
 
-h4. Binary Files
+h2. Binary Files
 
 The "Ayla website":http://www.cse.ohio-state.edu/~harveywi/ayla hosts the latest binaries (currently version 0.1) as well as a screencast demonstrating the functionality of the software.
 
-h4. Source Code
+h2. Source Code
 
-See the "Ayla Github
-repository":https://github.com/harveywi/Ayla-Visual-Analytics for source code and additional documentation.
+See the "Ayla Github repository":https://github.com/harveywi/Ayla-Visual-Analytics for source code and additional documentation.
 
-h4. Prerequisites
+h2. Prerequisites
+
+h3. Install Java 6+
 
 The software is written in "Scala":http://www.scala-lang.org and "Oracle Java Version 6+":http://www.oracle.com/technetwork/java/javase/downloads/index.html must be installed to run the binaries.  Processing large datasets (on the order of hundreds of thousands of protein conformations) can be memory-intensive; hence we recommend running the software on a machine with 8 GB of RAM or more.  (As the software matures, it will become faster and leaner.)
 
-h3. Creating an Ayla Dataset
+h3. Firewall Configuration
 
-h4. Directory structure
+Ayla uses port 9010 to communicate.  Thus, you must configure your firewall to allow communication over this port.
 
-bc. puts "This style (notice the single dot) stops at the first blank line."
-puts "This is the second line of code."
+h2. Creating an Ayla Dataset
 
-TODO say something about example dataset.
+Before getting started with Ayla, you will need a collection of protein conformations in the form of "Protein Data Bank (PDB)":http://en.wikipedia.org/wiki/Protein_Data_Bank_%28file_format%29 files.  The following steps will show you how to transform the collection of files into a format that you can work with using Ayla.
 
-h4. pointCloudMaker
+h3. Directory Structure
 
-TODO
+In order to get started, you need to create a new directory where you will keep all of your Ayla datasets (call it @datasets_root_dir@).  Within @datasets_root_dir@, create a directory where your first Ayla dataset will reside; let's call it @my_first_dataset@.  Within @my_first_dataset@ you must create two additional directories which are needed by Ayla that must be called @collab_projects@ and @scalar_functions@.  Thus, you should have created a directory structure which looks like this:
 
-h4. domainApproximator
+bc. 
+datasets_root_dir
+  my_first_dataset
+    collab_projects*
+    scalar_functions*
 
-TODO
+Items marked with asterisks must be named exactly as above.  Now, you need to put some additional data into the @my_first_dataset@ directory to tell Ayla about your PDB files.  Here are your choices:
 
-h3. The Ayla Server
+h4. PDB Files in a Zip Archive
 
-TODO
+If your PDB conformations are inside of a single zip archive, then create a link/shortcut inside of the @my_first_dataset@ directory called @conformations.zip@ which links to the archive.  You must also create a text file in @my_first_dataset@ called @conformation_zip_paths.txt@ in which each line contains the path of one of the PDB files with respect to the zip file's internal directory.  Thus, your directory structure should look like this:
 
-h3. The Ayla Client
+bc. 
+datasets_root_dir
+  my_first_dataset
+    collab_projects*
+    scalar_functions*
+    conformations.zip*
+    conformation_zip_paths.txt*
 
-TODO
+where values marked with an asterisk must be named exactly as shown.        
+
+h4. PDB Files in one or more directories
+
+If your PDB conformations are stored in one or more directories, then all you need to do is create a text file in @my_first_dataset@ called @conformation_filenames.txt@ in which each line contains the absolute path to a PDB file.  Thus, your directory structure should look like this:
+
+bc. 
+datasets_root_dir
+  my_first_dataset
+    collab_projects*
+    scalar_functions*
+    conformation_filenames.txt*
+
+where values marked with an asterisk must be named exactly as shown.
+
+h2. Running the Ayla Server
+
+To run the Ayla server, use the @aylaServer@ command.  Usage is as follows:
+
+@aylaServer datasets_root_dir@
+
+h2. Running the Ayla Client
+
+To start the Ayla client, use the @aylaClient.sh@ command.
+
+Basic usage of the Ayla client is covered in the screencast which can be seen at the "Ayla Visual Analytics":http://www.cse.ohio-state.edu/~harveywi/ayla/ website.
+
+h2. Troubleshooting
+
+h3. Connection Issues
+
+If you have started the Ayla server but are unable to connect to it using the Ayla client, make sure that your firewall allows communication over port 9010.
+
+h3. Java Issues
+
+If you are trying to run the software using OpenJDK and having problems, try switching to Oracle Java SE 6+.  I recall having some weird scala serialization problems on OpenJDK, but switching to Oracle's VM seemed to do the trick.
+
+h3.  Other Issues
+
+For other issues please contact William Harvey (harveywi at cse dot ohio-state dot edu).
