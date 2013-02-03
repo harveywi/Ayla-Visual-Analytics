@@ -1,0 +1,26 @@
+h1. Ayla Visual Analytics
+http://www.cse.ohio-state.edu/~harveywi/ayla
+
+h3. Introduction
+TODO
+
+h4. Binary Files
+TODO
+
+h4. Source Code
+TODO
+
+h3. Creating an Ayla Dataset
+TODO say something about example dataset.
+
+h4. pointCloudMaker
+TODO
+
+h4. domainApproximator
+TODO
+
+h3. The Ayla Server
+TODO
+
+h3. The Ayla Client
+TODO
