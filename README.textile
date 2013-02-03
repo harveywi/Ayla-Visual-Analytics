@@ -1,13 +1,17 @@
 h1. Ayla Visual Analytics
+
 http://www.cse.ohio-state.edu/~harveywi/ayla
 
 h3. Introduction
 
-TODO
+Ayla is a free, open source visualization tool for researchers in biochemistry, molecular dynamics, and protein folding. It is cross-platform, running on Windows, Mac OS X, and Linux systems.
+
+Ayla features a rich visual analytics environment in which many researchers can work together. A storyboard metaphor is used to organize interesting events in the data. 
 
 h4. Binary Files
 
-TODO
+The latest stable version of Ayla is 0.1, and binares are available at
+"the Ayla website":http://www.cse.ohio-state.edu/~harveywi/ayla .
 
 h4. Source Code
 
