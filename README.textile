@@ -89,7 +89,7 @@ h4. The @domainApproximator@ Utility
 
 The second step in preprocessing is to (optionally) filter out conformations which are uninteresting (or equivalently, select a subset of conformations which are particularly interesting) and approximate their putative conformational manifold structure by assembling a proximity graph.  The @domainApproximator@ utility performs these tasks.  Usage is as follows:
 
-bc.
+bc. 
 Usage:  domainApproximator [-w whitelist | -b blacklist] k dataset_dir outputFunctionName
 The -w option will keep the conformations in the given whitelist text file and ignore all others.
 The -b option will discard the conformations in the given blacklist text file and ignore all others.
