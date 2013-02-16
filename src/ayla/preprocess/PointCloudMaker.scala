@@ -59,7 +59,7 @@ object PointCloudMaker {
       pcaSample.foreach { s =>
         s.indices.foreach(i => s(i) -= pcaSampleMean(i))
       }
-      PCA.getPrincipalComponents(pcaSample, math.min(pcaSampleMean.length - 1, 500), pcaSampleMean)
+      PCA.getPrincipalComponents(pcaSample, math.min(pcaSample.length - 1, 500), pcaSampleMean)
     }
 
     val pcd = new Array[Array[Float]](pdbProvider.size)
