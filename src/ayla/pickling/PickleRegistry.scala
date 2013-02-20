@@ -1,8 +1,10 @@
 package ayla.pickling
 
+import scala.collection._
+
 object PickleRegistry {
-  private[this] val unpicklers = new scala.collection.mutable.ArrayBuffer[CanUnpickle[_]]
-  def register(x: CanUnpickle[_]): Unit = unpicklers += x
+  private[this] val unpicklers = new mutable.ArrayBuffer[String => Option[Any]] with mutable.SynchronizedBuffer[String => Option[Any]]
+  def register(x: String => Option[Any]): Unit = unpicklers += x
   
-  def decodePickle(pickle: String): Any = unpicklers.find(_.unpickle(pickle).isDefined)
+  def unpickle(pickle: String): Option[Any] = unpicklers.find(_(pickle).isDefined).flatMap(_(pickle))
 }

@@ -6,17 +6,18 @@ import scala.reflect.runtime.universe._
 
 object CanUnpickle {
   def parse[T](op: String => T) = (s: String) => op(s)
-}
-
-class CanUnpickle[ParserType <: HList](parser: ParserType) {
-  PickleRegistry.register(this)
-  type CaseClass
-
   type M = scala.collection.mutable.ArrayBuffer[String]
+  
   object mapToRemoveArrayBuffer extends Poly1 {
     implicit def casef1[T] = at[Function1[String, T]](f => (m: M) => f(m.remove(0)))
   }
+}
 
+abstract class CanUnpickle[ParserType <: HList] (parser: ParserType) {
+  type CaseClass
+  
+  import CanUnpickle._
+  
   @tailrec
   private[this] def tokenize(s: String, start: Int = 0, tokens: List[String] = List.empty[String]): List[String] = {
     if (start == s.length) {
