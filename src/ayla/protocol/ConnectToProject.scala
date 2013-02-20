@@ -25,8 +25,15 @@ import ayla.preprocess.DomainApproximator
 import ayla.geometry.ScalarFunction
 import ayla.geometry.ct.ContourTree
 
-case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient {
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = {
+import ayla.pickling._
+import ayla.pickling.CanUnpickle._
+import shapeless._
+import shapeless.Functions._
+
+case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient[ConnectToProjectResponse] with CanPickle[ConnectToProjectRequest]{
+  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(
+      implicit iso: Iso[ConnectToProjectResponse, H1],
+      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = {	
     val datasetDir = new File(server.datasetsRootDir, datasetName)
     
     val dataset = server.userSessions.find(session => session.projInfo.datasetName == datasetName).map(session => Success(session.dataset)).getOrElse {
@@ -76,7 +83,13 @@ case class ConnectToProjectRequest(datasetName: String, projName: String, sfName
   }
 }
 
-case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer {
+object ConnectToProjectRequest {
+  implicit def iso = Iso.hlist(ConnectToProjectRequest.apply _, ConnectToProjectRequest.unapply _)
+  val parser = parse(_.toString) :: parse(_.toString) :: parse(_.toString) :: parse(_.toString) :: HNil
+  makeUnpickler(iso, parser)
+}
+
+case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer with CanPickle[ConnectToProjectResponse] {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = replyWith(oosClient) {
     client.ct = ContourTree(proj.sf).simplify(65)
     client.sf = proj.sf
@@ -84,8 +97,11 @@ case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromS
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct
     val vertBatches = edges.map(e => Array(e.n1.vertex, e.n2.vertex) ++ e.noncriticalNodes.map(_.vertex))
     GetContourTreeAreasRequest(client.userName, vertBatches)
-//    replyWith(oosClient) {
-//      GetContourTreeAreasRequest(client.userName, client.ct)
-//    }
   }
+}
+
+object ConnectToProjectResponse {
+  implicit def iso = Iso.hlist(ConnectToProjectResponse.apply _, ConnectToProjectResponse.unapply _)
+  val parser = ((s: String) => CollaborationProject.unpickle(s).get) :: HNil
+  makeUnpickler(iso, parser)
 }

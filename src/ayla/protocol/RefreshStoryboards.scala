@@ -22,8 +22,14 @@ import ayla.collab.Storyboard
 import ayla.client.ui.event.StoryboardsRefreshed
 import scala.collection._
 
-case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+import ayla.pickling._
+import ayla.pickling.CanUnpickle._
+import shapeless._
+import shapeless.Functions._
+
+case class RefreshStoryboardsRequest(username: String) extends MsgFromClient[RefreshStoryboardsResponse] with CanPickle[RefreshStoryboardsRequest] {
+  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[RefreshStoryboardsResponse, H1],
+      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val storyboards = server.storyboardMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[Storyboard]).toArray
@@ -33,7 +39,12 @@ case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
   }
 }
 
-case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer {
+object RefreshStoryboardsRequest {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, parse(_.toString) :: HNil)
+}
+
+case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer with CanPickle[RefreshStoryboardsResponse] {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
 
     val curAnnotations = client.collabFrame.annotationListView.listData.map(_.annotation)
@@ -55,4 +66,9 @@ case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) 
     client.collabFrame.storyboardPanel.savedStoryboardsListView.listData = storyboards
     client.publish(StoryboardsRefreshed(storyboards))
   }
+}
+
+object RefreshStoryboardsResponse {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, ((s: String) => tokenize(s).map(t => Storyboard.unpickle(t).get).toArray) :: HNil)
 }

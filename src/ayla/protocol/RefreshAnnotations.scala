@@ -20,8 +20,14 @@ import ayla.client.ui.event.AnnotationsRefreshed
 import ayla.collab.ConformationAnnotation
 import scala.collection._
 
-case class RefreshAnnotationsRequest(username: String) extends MsgFromClient {
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+import ayla.pickling._
+import ayla.pickling.CanUnpickle._
+import shapeless._
+import shapeless.Functions._
+
+case class RefreshAnnotationsRequest(username: String) extends MsgFromClient[RefreshAnnotationsResponse] with CanPickle[RefreshAnnotationsRequest] {
+  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[RefreshAnnotationsResponse, H1],
+      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val annotations = server.annotationMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[ConformationAnnotation]).toArray
@@ -31,7 +37,12 @@ case class RefreshAnnotationsRequest(username: String) extends MsgFromClient {
   }
 }
 
-case class RefreshAnnotationsResponse(annotations: Array[ConformationAnnotation]) extends MsgFromServer {
+object RefreshAnnotationsRequest {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, parse(_.toString) :: HNil)
+}
+
+case class RefreshAnnotationsResponse(annotations: Array[ConformationAnnotation]) extends MsgFromServer with CanPickle [RefreshAnnotationsResponse]{
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
 
     val curAnnotationSet = client.collabFrame.annotationListView.listData.map(listItem => (listItem.annotation, listItem)).toMap
@@ -45,4 +56,9 @@ case class RefreshAnnotationsResponse(annotations: Array[ConformationAnnotation]
     client.collabFrame.annotationListView.listData = newListItems
     client.publish(AnnotationsRefreshed(annotations))
   }
+}
+
+object RefreshAnnotationsResponse {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, ((s: String) => tokenize(s).map(t => ConformationAnnotation.unpickle(t).get).toArray) :: HNil)
 }

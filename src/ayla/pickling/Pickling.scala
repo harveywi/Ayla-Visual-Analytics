@@ -9,40 +9,30 @@ import scala.annotation.tailrec
 
 object Pickling extends App {
 
-//  trait RegisteredUnpickler[X <: HList] { self: CanUnpickle[X] =>
-//      implicit def mapper[H2 <: HList]: MapperAux[CanUnpickle.mapToRemoveArrayBuffer.type, X, H2]
-//      implicit def cm[H2 <: HList, H3 <: HList]: ConstMapperAux[CanUnpickle.M, H2, H3]
-//      implicit def zipper[H2 <: HList, H3 <: HList, H4 <: HList]: ZipApplyAux[H2, H3, H4]
-//      implicit def iso[H4 <: HList]: Iso[CaseClass, H4]
-//      //self.unpickle("42")
-//      PickleRegistry.register(self.unpickle(_))
-//  }
-
   import CanUnpickle._
   case class JustATest(x: Int, y: String, z: Float) extends CanPickle[JustATest]
-  object JustATest extends CanUnpickle(parse(_.toInt) :: parse(_.toString) :: parse(_.toFloat) :: HNil) {
-    type CaseClass = JustATest
-    implicit def iso: Iso[JustATest, Int :: String :: Float :: HNil] = Iso.hlist(JustATest.apply _, JustATest.unapply _)
-    PickleRegistry.register(this.unpickle(_))
+  object JustATest {
+    implicit def iso = Iso.hlist(JustATest.apply _, JustATest.unapply _)
+    makeUnpickler(iso, parse(_.toInt) :: parse(_.toString) :: parse(_.toFloat) :: HNil)
   }
 
   val t = JustATest(11, "twenty two", 33.0f)
   val pickle = t.pickle
   println("Pickled:  " + pickle)
 
-  JustATest.unpickle(pickle) match {
+   PickleRegistry.unpickle(pickle) match {
     case Some(t) =>
       println("Success!")
       println(t)
-    case None => println("Failure")
+    case None => println("Failure 1")
   }
 
   case class Test2(a: String, b: Int, c: Double) extends CanPickle[Test2]
-  object Test2 extends CanUnpickle(parse(_.toString) :: parse(_.toInt) :: parse(_.toDouble) :: HNil) {
-    type CaseClass = Test2
+  object Test2 {
     implicit def iso = Iso.hlist(Test2.apply _, Test2.unapply _)
-    PickleRegistry.register(this.unpickle(_))
+    makeUnpickler(iso, parse(_.toString) :: parse(_.toInt) :: parse(_.toDouble) :: HNil)
   }
+
   val t2 = Test2("Hello world", 42, 100.0)
   val pickle2 = t2.pickle
   println("Pickled 2:  " + pickle2)
@@ -91,5 +81,37 @@ object Pickling extends App {
     	println("the foo contains:  " + x.asInstanceOf[Test4].test3.s)
     case None => println("Failure 4")
   }
-
+  
+  case class Test5(stuff: List[Int]) extends CanPickle[Test5]
+  object Test5 {
+    implicit def iso = Iso.hlist(Test5.apply _, Test5.unapply _)
+    makeUnpickler(iso, ((s: String) => tokenize(s).map(_.toInt)) :: HNil)
+  }
+  val t5 = Test5(List(1, 22, 333))
+  val pickle5 = t5.pickle
+  println("Pickle 5:  " + pickle5)
+  
+  PickleRegistry.unpickle(pickle5) match {
+    case Some(x) => println("Success 5:  " + x)
+    case None => println("Failure 5.")
+  }
+  
+  case class Test6(stuff: Option[Int]) extends CanPickle[Test6]
+  object Test6 {
+    implicit val iso = Iso.hlist(apply _, unapply _)
+    makeUnpickler(iso, ((s: String) => {
+      tokenize(s) match {
+        case List("Some", rest) => Some(rest.toInt)
+        case List("None") => None
+      }
+    }) :: HNil)
+  }
+  val t6 = Test6(Some(123))
+  val pickle6 = t6.pickle
+  println("Pickle 6:  " + pickle6)
+  PickleRegistry.unpickle(pickle6) match {
+    case Some(x) => println("Success 6:  " + x)
+    case None => println("Failure 6.")
+  }
+  
 }

@@ -1,6 +1,8 @@
 package ayla.pickling
 
 import shapeless._
+import scala.language.implicitConversions
+import java.io.File
 
 trait CanPickle[T] { self: T =>
   import CanPickle._
@@ -26,12 +28,12 @@ trait CanPickle[T] { self: T =>
 }
 
 object CanPickle {
-  object toPickle extends Poly1 {
-    def p[T](t: T): String = {
+  def p[T](t: T): String = {
       val str = t.toString
       s"${str.length} $str"
     }
-
+  
+  object toPickle extends Poly1 {
     implicit def caseDouble = at[Double](p)
     implicit def caseFloat = at[Float](p)
     implicit def caseLong = at[Long](p)
@@ -41,6 +43,40 @@ object CanPickle {
     implicit def caseBoolean = at[Boolean](p)
     implicit def caseChar = at[Char](p)
     implicit def caseString = at[String](p)
+    implicit def caseFile = at[File](f => p(f.getAbsolutePath))
+    
+    implicit def caseOption[T](implicit c: Case1[T]) = at[Option[T]]{opt =>
+      val encoded = opt match {
+        case Some(t) =>
+          p("Some") + toPickle(t)
+        case None => p("None")
+      }
+      p(encoded)
+    }
+    
+    implicit def caseMap[A, B](implicit ca: Case1[A], cb: Case1[B]) = at[Map[A, B]]{map =>
+      val encoded = map.flatMap{case (key, value) =>
+        Seq(toPickle(key), toPickle(value))
+      }.mkString
+      p(encoded)
+    }
+    
+    implicit def caseRegex = at[scala.util.matching.Regex](p)
+    implicit def caseArrayTupleStringInt = at[Array[(String, Int)]]{arr =>
+      val encoded = arr.flatMap{case (s, i) => Seq(p(s), p(i))}.mkString
+      p(encoded)
+    }
+    
+    implicit def caseList[T](implicit c: Case1[T]) = at[List[T]]{trav =>
+      val encoded = trav.map(toPickle).mkString
+      p(encoded)
+    }
+    
+    implicit def caseArray[T](implicit c: Case1[T]) = at[Array[T]]{arr =>
+      val encoded = arr.map(toPickle).mkString
+      p(encoded)
+    }
+    
     implicit def caseCanPickle[T <: CanPickle[T], H1 <: HList](implicit iso: Iso[T, H1], mapFolder: MapFolder[H1, String, toPickle.type]) = at[T]{x =>
       p(x.pickle)
     }

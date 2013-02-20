@@ -14,8 +14,15 @@ import java.io._
 import org.jgrapht.alg.DijkstraShortestPath
 import scala.collection.JavaConverters._
 
-case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: Int) extends MsgFromClient {
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+import ayla.pickling._
+import ayla.pickling.CanUnpickle._
+import shapeless._
+import shapeless.Functions._
+
+case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: Int) extends MsgFromClient[GetDomainShortestPathResponse] with CanPickle[GetDomainShortestPathRequest] {
+  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(
+      implicit iso: Iso[GetDomainShortestPathResponse, H1],
+      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
     val domainGraph = server.userSessions.find(_.username == username).map { session => session.domainGraph }.get
 
     val dsp = new DijkstraShortestPath(domainGraph, idStart, idEnd)
@@ -36,8 +43,17 @@ case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: I
   }
 }
 
-case class GetDomainShortestPathResponse(pathVerts: Array[Int]) extends MsgFromServer {
+object GetDomainShortestPathRequest {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, parse(_.toString) :: parse(_.toInt) :: parse(_.toInt) :: HNil)
+}
+
+case class GetDomainShortestPathResponse(pathVerts: Array[Int]) extends MsgFromServer with CanPickle[GetDomainShortestPathResponse]{
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
   	client.EventStreams.domainShortestPath.fire(pathVerts)
   }
+}
+object GetDomainShortestPathResponse {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, ((s: String) => tokenize(s).map(_.toInt).toArray) :: HNil)
 }

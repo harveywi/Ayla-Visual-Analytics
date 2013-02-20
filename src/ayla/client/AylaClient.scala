@@ -42,7 +42,7 @@ class AylaClient extends Publisher with Observing {
     case None => System.exit(0)
   }
 
-  def requestAndReact[T <: Serializable](msg: MsgFromClient, es: EventSource[T]): T = {
+  def requestAndReact[T <: Serializable, R <: MsgFromServer](msg: MsgFromClient[R], es: EventSource[T]): T = {
     class Foo extends Actor {
       def receive = {
         case "WaitForResult" =>

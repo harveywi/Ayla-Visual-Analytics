@@ -22,13 +22,14 @@ class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
   val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
 
   def receive = {
-    case m: ClientConnectRequest =>
-      println(s"Associating user name ${m.username} with an actor.")
-      aylaServer.usernameToServerActor(m.username) = self
-      m.serverDo(aylaServer, out)
-    case m: MsgFromClient => 
-      println("Server received message from client:  " + m)
-      m.serverDo(aylaServer, out)
-    case x @ _ => println("Server received weird message:  " + x)
+    case _ => ???
+//    case m: ClientConnectRequest =>
+//      println(s"Associating user name ${m.username} with an actor.")
+//      aylaServer.usernameToServerActor(m.username) = self
+//      m.serverDo(aylaServer, out)
+//    case m: MsgFromClient => 
+//      println("Server received message from client:  " + m)
+//      m.serverDo(aylaServer, out)
+//    case x @ _ => println("Server received weird message:  " + x)
   }
 }

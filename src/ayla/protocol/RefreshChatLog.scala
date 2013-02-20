@@ -20,8 +20,14 @@ import ayla.client.ui.event.AnnotationsRefreshed
 import ayla.collab.ConformationAnnotation
 import scala.collection._
 
-case class RefreshChatLogRequest(username: String) extends MsgFromClient {
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+import ayla.pickling._
+import ayla.pickling.CanUnpickle._
+import shapeless._
+import shapeless.Functions._
+
+case class RefreshChatLogRequest(username: String) extends MsgFromClient[RefreshChatLogResponse] with CanPickle[RefreshChatLogRequest] {
+  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[RefreshChatLogResponse, H1],
+      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val chatLog = server.chatMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[String]).toArray
@@ -31,8 +37,18 @@ case class RefreshChatLogRequest(username: String) extends MsgFromClient {
   }
 }
 
-case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer {
+object RefreshChatLogRequest {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, parse(_.toString) :: HNil)
+}
+
+case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer with CanPickle[RefreshChatLogResponse] {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
   	client.collabFrame.chatTextArea.text = chatLog.mkString("\n")
   }
+}
+
+object RefreshChatLogResponse {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  makeUnpickler(iso, ((s: String) => tokenize(s).toArray) :: HNil)
 }
