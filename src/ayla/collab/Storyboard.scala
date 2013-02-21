@@ -11,19 +11,21 @@ package ayla.collab
 
 import java.util.Date
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
 @SerialVersionUID(1L)
-case class Storyboard(val name: String, val annotations: Array[ConformationAnnotation]) extends CanPickle[Storyboard] {
+case class Storyboard(val name: String, val annotations: Array[ConformationAnnotation]) {
   val timestamp = new Date
   override def toString = "%s [%s]".format(name, timestamp.toString)
 }
 
-object Storyboard extends CanUnpickle(parse(_.toString) :: ((s: String) => tokenize(s).map(t => ConformationAnnotation.unpickle(t).get).toArray) :: HNil) {
-    type CaseClass = Storyboard
-    implicit def iso = Iso.hlist(Storyboard.apply _, Storyboard.unapply _)
-    PickleRegistry.register(this.unpickle(_))
-  }
+object Storyboard {
+  implicit def iso = Iso.hlist(Storyboard.apply _, Storyboard.unapply _)
+  implicit def iso2 = ConformationAnnotation.iso
+  implicit val (p, u) = picklerUnpickler[ConformationAnnotation].create()
+  PicklerRegistry2.register(picklerUnpickler[Storyboard].create())
+}

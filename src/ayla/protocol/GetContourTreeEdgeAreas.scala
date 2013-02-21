@@ -16,14 +16,14 @@ import ayla.geometry.ct.ContourTree
 import ayla.geometry.ct.ContourTreeNode
 import ayla.client.ui.DatasetExplorer
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array[Int]]) extends MsgFromClient[GetContourTreeAreasResponse] with CanPickle[GetContourTreeAreasRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[GetContourTreeAreasResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array[Int]]) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("Contour tree edge area request received.")
 
     println("Server is estimating areas.")
@@ -40,10 +40,10 @@ case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array
 }
 object GetContourTreeAreasRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, parse(_.toString) :: ((s: String) => tokenize(s).map(t => tokenize(t).map(_.toInt).toArray).toArray) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[GetContourTreeAreasRequest].create())
 }
 
-case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[Array[Char]], scalarArrays: Array[File]) extends MsgFromServer with CanPickle[GetContourTreeAreasResponse] {
+case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[Array[Char]], scalarArrays: Array[File]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct
     edges.iterator.zip(areas.iterator).foreach { case (e, area) => e.area = area }
@@ -82,13 +82,14 @@ case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[
 
 object GetContourTreeAreasResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  val parseAreas = ((s: String) => tokenize(s).map(_.toDouble).toArray)
-  val parseDSSP = ((s: String) => {
-      tokenize(s) match {
-        case List("Some", rest) => Some(tokenize(rest).map(_.head).toArray)
-        case List("None") => None
-      }
-    })
-  val parseFiles = ((s: String)) => tokenize(s).map(new File(_)).toArray
-  makeUnpickler(iso, parseAreas :: parseDSSP :: parseFiles :: HNil)
+//  val parseAreas = ((s: String) => tokenize(s).map(_.toDouble).toArray)
+//  val parseDSSP = ((s: String) => {
+//      tokenize(s) match {
+//        case List("Some", rest) => Some(tokenize(rest).map(_.head).toArray)
+//        case List("None") => None
+//      }
+//    })
+//  val parseFiles = ((s: String)) => tokenize(s).map(new File(_)).toArray
+//  makeUnpickler(iso, parseAreas :: parseDSSP :: parseFiles :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[GetContourTreeAreasResponse].create())
 }

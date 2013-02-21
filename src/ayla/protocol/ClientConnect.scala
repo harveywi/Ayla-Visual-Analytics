@@ -13,15 +13,14 @@ import ayla.server._
 import java.io._
 import ayla.client.ui.ConfirmationDialog
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class ClientConnectRequest(username: String) extends MsgFromClient[ClientConnectResponse] with CanPickle[ClientConnectRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(
-      implicit iso: Iso[ClientConnectResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class ClientConnectRequest(username: String) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("server is trying to register username:  " + username)
     server.userSessions.find(_.username == username) match {
       case Some(_) => ClientConnectResponse(username, false, s"Someone already registered that user name ($username).")
@@ -31,10 +30,10 @@ case class ClientConnectRequest(username: String) extends MsgFromClient[ClientCo
 }
 object ClientConnectRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, parse(_.toString) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[ClientConnectRequest].create())
 }
 
-case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, message: String) extends MsgFromServer with CanPickle[ClientConnectResponse] {
+case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, message: String) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     if (connectionAccepted) {
       println("Connection accepted!")
@@ -53,6 +52,6 @@ case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, 
   }
 }
 object ClientConnectResponse {
-  implicit def iso = Iso.hlist(ClientConnectResponse.apply _, ClientConnectResponse.unapply _)
-  makeUnpickler(iso, parse(_.toString) :: parse(_.toBoolean) :: parse(_.toString) :: HNil)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[ClientConnectResponse].create())
 }

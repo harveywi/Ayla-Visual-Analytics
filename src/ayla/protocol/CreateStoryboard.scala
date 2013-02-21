@@ -11,20 +11,25 @@ package ayla.protocol
 import ayla.collab.Storyboard
 import java.io._
 import ayla.server.AylaServer
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
-import shapeless._
-import shapeless.Functions._
 import ayla.client.AylaClient
+import shapeless._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
+import ayla.collab.ConformationAnnotation
 
-case class CreateStoryboard(username: String, storyboard: Storyboard) extends MsgFromClient[CreateStoryboardResponse] with CanPickle[CreateStoryboard] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[CreateStoryboardResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = server.logStoryboard(username, storyboard)
+case class CreateStoryboard(username: String, storyboard: Storyboard) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logStoryboard(username, storyboard)
 }
 
 object CreateStoryboard {
-  implicit def iso = Iso.hlist(CreateStoryboard.apply _, CreateStoryboard.unapply _)
-  makeUnpickler(iso,  parse(_.toString) :: ((s: String) => Storyboard.unpickle(s).get) :: HNil)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  implicit def iso2 = Storyboard.iso
+  implicit def iso3 = ConformationAnnotation.iso
+  implicit val (p2, u2) = picklerUnpickler[ConformationAnnotation].create()
+  implicit val (p, u) = picklerUnpickler[Storyboard].create()
+  PicklerRegistry2.register(picklerUnpickler[CreateStoryboard].create())
 }
 
 case class CreateStoryboardResponse(sb: String) extends MsgFromServer {

@@ -16,25 +16,20 @@ import akka.actor.Actor
 import java.io._
 import reactive._
 
-import ayla.pickling._
-import ayla.pickling.CanPickle._
-import shapeless._
-
 sealed trait AylaMsg {
-  def replyWith[P, H1 <: HList](oos: ObjectOutputStream)(op: => AylaMsg with CanPickle[P])(implicit iso: Iso[P, H1], mapFolder: MapFolder[H1, String, toPickle.type]) = {
-    val x = op
-    val pickle = x.pickle
-    oos.writeObject(pickle)
-    oos.flush()
+  def replyWith(oos: ObjectOutputStream)(op: => AylaMsg) = {
 //    val x = op
-//    oos.writeObject(x)
+//    val pickle = x.pickle
+//    oos.writeObject(pickle)
 //    oos.flush()
+    val x = op
+    oos.writeObject(x)
+    oos.flush()
   }
 }
 
-trait MsgFromClient[R <: MsgFromServer] extends AylaMsg {
-  def serverDo[H1 <: HList](server: AylaServer, oosReply: ObjectOutputStream)(implicit iso: Iso[R, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type])
+trait MsgFromClient extends AylaMsg {
+  def serverDo(server: AylaServer, oosReply: ObjectOutputStream)
 }
 
 trait MsgFromServer extends AylaMsg {

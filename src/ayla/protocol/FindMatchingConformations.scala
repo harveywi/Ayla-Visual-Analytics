@@ -13,14 +13,14 @@ import ayla.server._
 import java.io._
 import scala.util.matching.Regex
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class FindMatchingConformationsRequest(username: String, regex: Regex) extends MsgFromClient[FindMatchingConformationsResponse] with CanPickle[FindMatchingConformationsRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[FindMatchingConformationsResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class FindMatchingConformationsRequest(username: String, regex: Regex) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     // This finds all matches in the unsampled dataset.
     val matchResults = server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -42,18 +42,16 @@ case class FindMatchingConformationsRequest(username: String, regex: Regex) exte
 
 object FindMatchingConformationsRequest {
   implicit def iso = Iso.hlist(FindMatchingConformationsRequest.apply _, FindMatchingConformationsRequest.unapply _)
-  makeUnpickler(iso, parse(_.toString) :: ((s: String) => new Regex(s)) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[FindMatchingConformationsRequest].create())
 }
 
-case class FindMatchingConformationsResponse(matchResults: Array[(String, Int)]) extends MsgFromServer with CanPickle[FindMatchingConformationsResponse] {
+case class FindMatchingConformationsResponse(matchResults: Array[(String, Int)]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     client.EventStreams.matchingConformations.fire(matchResults)
   }
 }
 
 object FindMatchingConformationsResponse {
-  implicit def iso = Iso.hlist(FindMatchingConformationsResponse.apply _, FindMatchingConformationsResponse.unapply _)
-  makeUnpickler(iso, ((s: String) => tokenize(s).map(t => tokenize(t) match {
-    case List(s, i) => (s, i.toInt)
-  }).toArray) :: HNil)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[FindMatchingConformationsResponse].create())
 }

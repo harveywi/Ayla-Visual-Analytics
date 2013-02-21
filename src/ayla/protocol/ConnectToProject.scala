@@ -25,15 +25,14 @@ import ayla.preprocess.DomainApproximator
 import ayla.geometry.ScalarFunction
 import ayla.geometry.ct.ContourTree
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient[ConnectToProjectResponse] with CanPickle[ConnectToProjectRequest]{
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(
-      implicit iso: Iso[ConnectToProjectResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = {	
+case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = {	
     val datasetDir = new File(server.datasetsRootDir, datasetName)
     
     val dataset = server.userSessions.find(session => session.projInfo.datasetName == datasetName).map(session => Success(session.dataset)).getOrElse {
@@ -84,12 +83,11 @@ case class ConnectToProjectRequest(datasetName: String, projName: String, sfName
 }
 
 object ConnectToProjectRequest {
-  implicit def iso = Iso.hlist(ConnectToProjectRequest.apply _, ConnectToProjectRequest.unapply _)
-  val parser = parse(_.toString) :: parse(_.toString) :: parse(_.toString) :: parse(_.toString) :: HNil
-  makeUnpickler(iso, parser)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[ConnectToProjectRequest].create())
 }
 
-case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer with CanPickle[ConnectToProjectResponse] {
+case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = replyWith(oosClient) {
     client.ct = ContourTree(proj.sf).simplify(65)
     client.sf = proj.sf
@@ -101,7 +99,10 @@ case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromS
 }
 
 object ConnectToProjectResponse {
-  implicit def iso = Iso.hlist(ConnectToProjectResponse.apply _, ConnectToProjectResponse.unapply _)
-  val parser = ((s: String) => CollaborationProject.unpickle(s).get) :: HNil
-  makeUnpickler(iso, parser)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  implicit def iso2 = CollaborationProject.iso
+  implicit def iso3 = ScalarFunction.iso
+  implicit val (p1, u1) = picklerUnpickler[ScalarFunction].create()
+  implicit val (p2, u2) = picklerUnpickler[CollaborationProject].create()
+  PicklerRegistry2.register(picklerUnpickler[ConnectToProjectResponse].create())
 }

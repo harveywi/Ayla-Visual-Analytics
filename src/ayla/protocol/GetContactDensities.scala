@@ -13,14 +13,14 @@ import ayla.server._
 import java.io._
 import scala.util.matching.Regex
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class GetContactDensitiesRequest(username: String, residues: Array[Int]) extends MsgFromClient[GetContactDensitiesResponse] with CanPickle[GetContactDensitiesRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[GetContactDensitiesResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class GetContactDensitiesRequest(username: String, residues: Array[Int]) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     // This finds all matches in the unsampled dataset.
     val densities = server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -34,10 +34,10 @@ case class GetContactDensitiesRequest(username: String, residues: Array[Int]) ex
 
 object GetContactDensitiesRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, parse(_.toString) :: ((s: String) => tokenize(s).map(_.toInt).toArray) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[GetContactDensitiesRequest].create())
 }
 
-case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromServer with CanPickle[GetContactDensitiesResponse] {
+case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     client.EventStreams.contactDensities.fire(densities)
   }
@@ -45,5 +45,5 @@ case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromSer
 
 object GetContactDensitiesResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, ((s: String) => tokenize(s).map(_.toInt).toArray) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[GetContactDensitiesResponse].create())
 }

@@ -12,13 +12,14 @@ import java.util.Comparator
 import scala.collection.JavaConversions._
 import ayla.util.UnionFind
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
 @SerialVersionUID(1L)
-case class ScalarFunction(override val vertices: Array[Array[Float]], override val faces: Array[Array[Int]], val getFuncVal: Array[Float]) extends SimplicialComplex(vertices, faces) with CanPickle[ScalarFunction] {
+case class ScalarFunction(override val vertices: Array[Array[Float]], override val faces: Array[Array[Int]], val getFuncVal: Array[Float]) extends SimplicialComplex(vertices, faces)  {
   val minFuncVal = vertices.indices.map(getFuncVal(_)).min
   val maxFuncVal = vertices.indices.map(getFuncVal(_)).max
   val rangeFuncVal = if (maxFuncVal - minFuncVal != 0) maxFuncVal - minFuncVal else 1
@@ -164,15 +165,20 @@ case class ScalarFunction(override val vertices: Array[Array[Float]], override v
   }
 }
 
-protected[this] object ScalarFunctionHelper {
-  val vertParser = (s: String) => tokenize(s).map(t => tokenize(t).map(_.toFloat).toArray).toArray
-  val faceParser = (s: String) => tokenize(s).map(t => tokenize(t).map(_.toInt).toArray).toArray
-  val funcValParser = (s: String) => tokenize(s).map(_.toFloat).toArray
+object ScalarFunction {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[ScalarFunction].create())
 }
 
-object ScalarFunction extends CanUnpickle(
-  ScalarFunctionHelper.vertParser :: ScalarFunctionHelper.faceParser :: ScalarFunctionHelper.funcValParser :: HNil) {
-  type CaseClass = ScalarFunction
-  implicit def iso = Iso.hlist(ScalarFunction.apply _, ScalarFunction.unapply _)
-  PickleRegistry.register(this.unpickle(_))
-}
+//protected[this] object ScalarFunctionHelper {
+//  val vertParser = (s: String) => tokenize(s).map(t => tokenize(t).map(_.toFloat).toArray).toArray
+//  val faceParser = (s: String) => tokenize(s).map(t => tokenize(t).map(_.toInt).toArray).toArray
+//  val funcValParser = (s: String) => tokenize(s).map(_.toFloat).toArray
+//}
+//
+//object ScalarFunction extends CanUnpickle(
+//  ScalarFunctionHelper.vertParser :: ScalarFunctionHelper.faceParser :: ScalarFunctionHelper.funcValParser :: HNil) {
+//  type CaseClass = ScalarFunction
+//  implicit def iso = Iso.hlist(ScalarFunction.apply _, ScalarFunction.unapply _)
+//  PickleRegistry.register(this.unpickle(_))
+//}

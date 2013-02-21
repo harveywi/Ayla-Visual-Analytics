@@ -22,14 +22,14 @@ import ayla.collab.Storyboard
 import ayla.client.ui.event.StoryboardsRefreshed
 import scala.collection._
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class RefreshStoryboardsRequest(username: String) extends MsgFromClient[RefreshStoryboardsResponse] with CanPickle[RefreshStoryboardsRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[RefreshStoryboardsResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val storyboards = server.storyboardMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[Storyboard]).toArray
@@ -41,10 +41,10 @@ case class RefreshStoryboardsRequest(username: String) extends MsgFromClient[Ref
 
 object RefreshStoryboardsRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, parse(_.toString) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[RefreshStoryboardsRequest].create())
 }
 
-case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer with CanPickle[RefreshStoryboardsResponse] {
+case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
 
     val curAnnotations = client.collabFrame.annotationListView.listData.map(_.annotation)
@@ -70,5 +70,9 @@ case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) 
 
 object RefreshStoryboardsResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, ((s: String) => tokenize(s).map(t => Storyboard.unpickle(t).get).toArray) :: HNil)
+  implicit def iso2 = Storyboard.iso
+  implicit def iso3 = ConformationAnnotation.iso
+  implicit val (p2, u2) = picklerUnpickler[ConformationAnnotation].create()
+  implicit val (p, u) = picklerUnpickler[Storyboard].create()
+  PicklerRegistry2.register(picklerUnpickler[RefreshStoryboardsResponse].create())
 }

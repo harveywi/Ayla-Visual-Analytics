@@ -15,7 +15,6 @@ import akka.actor._
 import ayla.client.ui.ConfirmationDialog
 import ayla.client.ui.LoginInfo
 import ayla.protocol._
-import ayla.pickling.CanPickle
 
 class ClientActor(aylaClient: AylaClient) extends Actor {
 
@@ -34,7 +33,7 @@ class ClientActor(aylaClient: AylaClient) extends Actor {
     case m: MsgFromServer =>
       m.clientDo(aylaClient, out)
       
-    case m: MsgFromClient[_] =>
+    case m: MsgFromClient =>
       println("ClientActor is sending message to server:  " + m)
       if (!m.isInstanceOf[Serializable]) {
         println(m.getClass)

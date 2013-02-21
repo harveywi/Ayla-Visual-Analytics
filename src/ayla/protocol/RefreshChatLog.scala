@@ -20,14 +20,14 @@ import ayla.client.ui.event.AnnotationsRefreshed
 import ayla.collab.ConformationAnnotation
 import scala.collection._
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class RefreshChatLogRequest(username: String) extends MsgFromClient[RefreshChatLogResponse] with CanPickle[RefreshChatLogRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[RefreshChatLogResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class RefreshChatLogRequest(username: String) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val chatLog = server.chatMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[String]).toArray
@@ -39,10 +39,10 @@ case class RefreshChatLogRequest(username: String) extends MsgFromClient[Refresh
 
 object RefreshChatLogRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, parse(_.toString) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[RefreshChatLogRequest].create())
 }
 
-case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer with CanPickle[RefreshChatLogResponse] {
+case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
   	client.collabFrame.chatTextArea.text = chatLog.mkString("\n")
   }
@@ -50,5 +50,5 @@ case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer 
 
 object RefreshChatLogResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  makeUnpickler(iso, ((s: String) => tokenize(s).toArray) :: HNil)
+  PicklerRegistry2.register(picklerUnpickler[RefreshChatLogResponse].create())
 }

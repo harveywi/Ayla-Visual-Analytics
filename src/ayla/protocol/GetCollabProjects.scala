@@ -17,24 +17,24 @@ import ayla.client.ui.menu.PieMenuRoot
 import ayla.client.ui._
 import java.io._
 
-import ayla.pickling._
-import ayla.pickling.CanUnpickle._
 import shapeless._
-import shapeless.Functions._
+import ayla.pickling2.Pickling._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
 
-case class GetCollabProjectsRequest(userName: String) extends MsgFromClient[GetCollabProjectsResponse] with CanPickle[GetCollabProjectsRequest] {
-  def serverDo[H1 <: HList](server: AylaServer, oosServer: ObjectOutputStream)(implicit iso: Iso[GetCollabProjectsResponse, H1],
-      mapFolder: MapFolder[H1, String, CanPickle.toPickle.type]) = replyWith(oosServer) {
+case class GetCollabProjectsRequest(userName: String) extends MsgFromClient {
+  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("Server is preparing the list of collaboration projects")
     GetCollabProjectsResponse(server.datasets, server.scalarFunctions)
   }
 }
 object GetCollabProjectsRequest {
-  implicit def iso = Iso.hlist(GetCollabProjectsRequest.apply _, GetCollabProjectsRequest.unapply _)
-  makeUnpickler(iso, parse(_.toString) :: HNil)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[GetCollabProjectsRequest].create())
 }
 
-case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], scalarFunctionMap: Map[String, Array[String]]) extends MsgFromServer with CanPickle[GetCollabProjectsResponse] {
+case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], scalarFunctionMap: Map[String, Array[String]]) extends MsgFromServer {
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     println("Got the stuff!")
     projHierarchy.foreach(println)
@@ -71,14 +71,15 @@ case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], 
 }
 
 object GetCollabProjectsResponse {
-  implicit def iso = Iso.hlist(GetCollabProjectsResponse.apply _, GetCollabProjectsResponse.unapply _)
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  PicklerRegistry2.register(picklerUnpickler[GetCollabProjectsResponse].create())
 
-  val parseMap = (s: String) =>
-    tokenize(s).map { t =>
-      tokenize(t) match {
-        case List(key, values) => key -> tokenize(values).toArray
-      }
-    }.toMap
-
-    makeUnpickler(iso, parseMap :: parseMap :: HNil)
+//  val parseMap = (s: String) =>
+//    tokenize(s).map { t =>
+//      tokenize(t) match {
+//        case List(key, values) => key -> tokenize(values).toArray
+//      }
+//    }.toMap
+//
+//    makeUnpickler(iso, parseMap :: parseMap :: HNil)
 }
