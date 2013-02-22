@@ -14,12 +14,16 @@ import ayla.pickling2.Pickling._
 import ayla.pickling2.DefaultPicklers._
 import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
+import ayla.pickling2.Picklable
 
-case class ConformationAnnotation(val name: String, val sampledConformationID: Int, val terrainCameraTransform: Array[Double], val pdbLines: Array[String]) extends AylaAnnotation
+case class ConformationAnnotation(val name: String, val sampledConformationID: Int, val terrainCameraTransform: Array[Double], val pdbLines: Array[String]) extends AylaAnnotation with Picklable {
+  def pickled: String = ConformationAnnotation.pickler.pickle(this)
+}
 
 object ConformationAnnotation {
   implicit def iso = Iso.hlist(apply _, unapply _)
-  PicklerRegistry2.register(picklerUnpickler[ConformationAnnotation].create())
+  val (pickler, unpickler) = picklerUnpickler[ConformationAnnotation].create()
+  PicklerRegistry2.register((pickler, unpickler))
 }
 
 //object ConformationAnnotation extends CanUnpickle(parse(_.toString) :: parse(_.toInt) :: ((s: String) => tokenize(s).map(_.toDouble).toArray) :: ((s: String) => tokenize(s).toArray) :: HNil) {

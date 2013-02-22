@@ -24,6 +24,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetCollabProjectsRequest(userName: String) extends MsgFromClient {
+  def pickled: String = GetCollabProjectsRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("Server is preparing the list of collaboration projects")
     GetCollabProjectsResponse(server.datasets, server.scalarFunctions)
@@ -31,10 +32,12 @@ case class GetCollabProjectsRequest(userName: String) extends MsgFromClient {
 }
 object GetCollabProjectsRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetCollabProjectsRequest].create()
   PicklerRegistry2.register(picklerUnpickler[GetCollabProjectsRequest].create())
 }
 
 case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], scalarFunctionMap: Map[String, Array[String]]) extends MsgFromServer {
+  def pickled: String = GetCollabProjectsResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     println("Got the stuff!")
     projHierarchy.foreach(println)
@@ -72,14 +75,6 @@ case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], 
 
 object GetCollabProjectsResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetCollabProjectsResponse].create()
   PicklerRegistry2.register(picklerUnpickler[GetCollabProjectsResponse].create())
-
-//  val parseMap = (s: String) =>
-//    tokenize(s).map { t =>
-//      tokenize(t) match {
-//        case List(key, values) => key -> tokenize(values).toArray
-//      }
-//    }.toMap
-//
-//    makeUnpickler(iso, parseMap :: parseMap :: HNil)
 }

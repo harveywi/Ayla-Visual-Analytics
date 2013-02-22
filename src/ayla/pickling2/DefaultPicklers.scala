@@ -7,7 +7,8 @@ import java.io.File
 trait DefaultPicklers {
   def p[T](t: T): String = {
     val str = t.toString
-    s"${str.length} $str"
+//    s"${str.length} $str"
+    str.length + " " + str
   }
   
   implicit val intPickler: Pickler[Int] = new Pickler[Int] {

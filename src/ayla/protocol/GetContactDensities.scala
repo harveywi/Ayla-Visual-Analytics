@@ -20,6 +20,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetContactDensitiesRequest(username: String, residues: Array[Int]) extends MsgFromClient {
+  def pickled: String = GetContactDensitiesRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     // This finds all matches in the unsampled dataset.
     val densities = server.userSessions.find(_.username == username) match {
@@ -34,10 +35,12 @@ case class GetContactDensitiesRequest(username: String, residues: Array[Int]) ex
 
 object GetContactDensitiesRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetContactDensitiesRequest].create()
   PicklerRegistry2.register(picklerUnpickler[GetContactDensitiesRequest].create())
 }
 
 case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromServer {
+  def pickled: String = GetContactDensitiesResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     client.EventStreams.contactDensities.fire(densities)
   }
@@ -45,5 +48,6 @@ case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromSer
 
 object GetContactDensitiesResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetContactDensitiesResponse].create()
   PicklerRegistry2.register(picklerUnpickler[GetContactDensitiesResponse].create())
 }

@@ -15,15 +15,16 @@ import akka.actor._
 import akka.actor.Actor
 import java.io._
 import reactive._
+import ayla.pickling2.Picklable
 
-sealed trait AylaMsg {
+sealed trait AylaMsg extends Picklable {
   def replyWith(oos: ObjectOutputStream)(op: => AylaMsg) = {
 //    val x = op
 //    val pickle = x.pickle
 //    oos.writeObject(pickle)
 //    oos.flush()
     val x = op
-    oos.writeObject(x)
+    oos.writeObject(x.pickled)
     oos.flush()
   }
 }
@@ -34,10 +35,9 @@ trait MsgFromClient extends AylaMsg {
 
 trait MsgFromServer extends AylaMsg {
   def clientDo(client: AylaClient, oosReply: ObjectOutputStream)
-  
 }
 
-trait MsgFromServerReactive[T <: Serializable] extends MsgFromServer with Serializable {
+trait MsgFromServerReactive[T <: Serializable] extends MsgFromServer with Picklable {
   def data: T
   def es(client: AylaClient): EventSource[T]
   
@@ -48,8 +48,9 @@ trait MsgFromServerReactive[T <: Serializable] extends MsgFromServer with Serial
 }
 
 object MsgFromServerReactive {
-  def apply[T <: Serializable](dataToSend: T, eventSource: AylaClient => EventSource[T]) = new MsgFromServerReactive[T] {
-    val data = dataToSend
-    def es(client: AylaClient) = eventSource(client)
-  }
+  def apply[T <: Serializable](dataToSend: T, eventSource: AylaClient => EventSource[T]) = ???
+//  def apply[T <: Serializable](dataToSend: T, eventSource: AylaClient => EventSource[T]) = new MsgFromServerReactive[T] {
+//    val data = dataToSend
+//    def es(client: AylaClient) = eventSource(client)
+//  }
 }

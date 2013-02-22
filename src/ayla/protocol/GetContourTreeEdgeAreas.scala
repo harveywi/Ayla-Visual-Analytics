@@ -23,6 +23,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array[Int]]) extends MsgFromClient {
+  def pickled: String = GetContourTreeAreasRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("Contour tree edge area request received.")
 
@@ -40,10 +41,12 @@ case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array
 }
 object GetContourTreeAreasRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetContourTreeAreasRequest].create()
   PicklerRegistry2.register(picklerUnpickler[GetContourTreeAreasRequest].create())
 }
 
 case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[Array[Char]], scalarArrays: Array[File]) extends MsgFromServer {
+  def pickled: String = GetContourTreeAreasResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct
     edges.iterator.zip(areas.iterator).foreach { case (e, area) => e.area = area }
@@ -91,5 +94,6 @@ object GetContourTreeAreasResponse {
 //    })
 //  val parseFiles = ((s: String)) => tokenize(s).map(new File(_)).toArray
 //  makeUnpickler(iso, parseAreas :: parseDSSP :: parseFiles :: HNil)
+  val (pickler, unpickler) = picklerUnpickler[GetContourTreeAreasResponse].create()
   PicklerRegistry2.register(picklerUnpickler[GetContourTreeAreasResponse].create())
 }

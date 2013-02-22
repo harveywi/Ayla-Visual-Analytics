@@ -27,6 +27,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class RefreshAnnotationsRequest(username: String) extends MsgFromClient {
+  def pickled: String = RefreshAnnotationsRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -39,12 +40,13 @@ case class RefreshAnnotationsRequest(username: String) extends MsgFromClient {
 
 object RefreshAnnotationsRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[RefreshAnnotationsRequest].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshAnnotationsRequest].create())
 }
 
 case class RefreshAnnotationsResponse(annotations: Array[ConformationAnnotation]) extends MsgFromServer {
+  def pickled = RefreshAnnotationsResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
-
     val curAnnotationSet = client.collabFrame.annotationListView.listData.map(listItem => (listItem.annotation, listItem)).toMap
     val newListItems = annotations.map{a =>
       curAnnotationSet.get(a) match {
@@ -62,5 +64,6 @@ object RefreshAnnotationsResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
   implicit def iso2 = ConformationAnnotation.iso
   implicit val (p, u) = picklerUnpickler[ConformationAnnotation].create()
+  val (pickler, unpickler) = picklerUnpickler[RefreshAnnotationsResponse].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshAnnotationsResponse].create())
 }

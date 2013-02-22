@@ -20,6 +20,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class FindMatchingConformationsRequest(username: String, regex: Regex) extends MsgFromClient {
+  def pickled: String = FindMatchingConformationsRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     // This finds all matches in the unsampled dataset.
     val matchResults = server.userSessions.find(_.username == username) match {
@@ -42,10 +43,12 @@ case class FindMatchingConformationsRequest(username: String, regex: Regex) exte
 
 object FindMatchingConformationsRequest {
   implicit def iso = Iso.hlist(FindMatchingConformationsRequest.apply _, FindMatchingConformationsRequest.unapply _)
+  val (pickler, unpickler) = picklerUnpickler[FindMatchingConformationsRequest].create()
   PicklerRegistry2.register(picklerUnpickler[FindMatchingConformationsRequest].create())
 }
 
 case class FindMatchingConformationsResponse(matchResults: Array[(String, Int)]) extends MsgFromServer {
+  def pickled: String = FindMatchingConformationsResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     client.EventStreams.matchingConformations.fire(matchResults)
   }
@@ -53,5 +56,6 @@ case class FindMatchingConformationsResponse(matchResults: Array[(String, Int)])
 
 object FindMatchingConformationsResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[FindMatchingConformationsResponse].create()
   PicklerRegistry2.register(picklerUnpickler[FindMatchingConformationsResponse].create())
 }

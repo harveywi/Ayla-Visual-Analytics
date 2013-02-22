@@ -27,6 +27,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class RefreshChatLogRequest(username: String) extends MsgFromClient {
+  def pickled: String = RefreshChatLogRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -39,10 +40,12 @@ case class RefreshChatLogRequest(username: String) extends MsgFromClient {
 
 object RefreshChatLogRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[RefreshChatLogRequest].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshChatLogRequest].create())
 }
 
 case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer {
+  def pickled = RefreshChatLogResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
   	client.collabFrame.chatTextArea.text = chatLog.mkString("\n")
   }
@@ -50,5 +53,6 @@ case class RefreshChatLogResponse(chatLog: Array[String]) extends MsgFromServer 
 
 object RefreshChatLogResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[RefreshChatLogResponse].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshChatLogResponse].create())
 }

@@ -29,6 +29,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
+  def pickled: String = RefreshStoryboardsRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -41,10 +42,12 @@ case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
 
 object RefreshStoryboardsRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[RefreshStoryboardsRequest].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshStoryboardsRequest].create())
 }
 
 case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer {
+  def pickled: String = RefreshStoryboardsResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
 
     val curAnnotations = client.collabFrame.annotationListView.listData.map(_.annotation)
@@ -74,5 +77,6 @@ object RefreshStoryboardsResponse {
   implicit def iso3 = ConformationAnnotation.iso
   implicit val (p2, u2) = picklerUnpickler[ConformationAnnotation].create()
   implicit val (p, u) = picklerUnpickler[Storyboard].create()
+  val (pickler, unpickler) = picklerUnpickler[RefreshStoryboardsResponse].create()
   PicklerRegistry2.register(picklerUnpickler[RefreshStoryboardsResponse].create())
 }

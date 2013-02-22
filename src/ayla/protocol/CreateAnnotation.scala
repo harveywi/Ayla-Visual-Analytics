@@ -25,6 +25,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class CreateAnnotationRequest(username: String, annotation: ConformationAnnotation) extends MsgFromClient {
+  def pickled = CreateAnnotationRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logAnnotation(username, annotation)
 }
 
@@ -32,5 +33,7 @@ object CreateAnnotationRequest {
   implicit def iso = Iso.hlist(CreateAnnotationRequest.apply _, CreateAnnotationRequest.unapply _)
   implicit def iso2 = ConformationAnnotation.iso
   implicit val (p, u) = picklerUnpickler[ConformationAnnotation].create()
+  
+  val (pickler, unpickler) = picklerUnpickler[CreateAnnotationRequest].create()
   PicklerRegistry2.register(picklerUnpickler[CreateAnnotationRequest].create())
 }

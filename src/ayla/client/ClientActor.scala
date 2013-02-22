@@ -15,6 +15,8 @@ import akka.actor._
 import ayla.client.ui.ConfirmationDialog
 import ayla.client.ui.LoginInfo
 import ayla.protocol._
+import ayla.pickling2.PicklerRegistry2
+import ayla.pickling2.Picklable
 
 class ClientActor(aylaClient: AylaClient) extends Actor {
 
@@ -27,19 +29,27 @@ class ClientActor(aylaClient: AylaClient) extends Actor {
       
       in = new ObjectInputStream(loginInfo.socket.getInputStream())
       val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
-      out.writeObject(ClientConnectRequest(loginInfo.username))
+      out.writeObject(ClientConnectRequest(loginInfo.username).pickled)
       out.flush
 
-    case m: MsgFromServer =>
-      m.clientDo(aylaClient, out)
+//    case m: MsgFromServer =>
+//      m.clientDo(aylaClient, out)
+    
+    case s: String =>
+      PicklerRegistry2.unpickle(s) match {
+        case Some(m: MsgFromServer) =>
+          m.clientDo(aylaClient, out)
+        case _ =>
+          throw new RuntimeException("Unexpected string message received:  " + s)
+      }
       
     case m: MsgFromClient =>
       println("ClientActor is sending message to server:  " + m)
-      if (!m.isInstanceOf[Serializable]) {
+      if (!m.isInstanceOf[Picklable]) {
         println(m.getClass)
-        println("Not serializable!")
+        println("Not picklable:  " + m.getClass)
       }
-      out.writeObject(m)
+      out.writeObject(m.pickled)
       out.flush
       
     case SocketDead =>

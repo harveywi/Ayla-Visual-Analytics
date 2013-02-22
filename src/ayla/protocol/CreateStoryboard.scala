@@ -20,6 +20,7 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.collab.ConformationAnnotation
 
 case class CreateStoryboard(username: String, storyboard: Storyboard) extends MsgFromClient {
+  def pickled: String = CreateStoryboard.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logStoryboard(username, storyboard)
 }
 
@@ -29,12 +30,6 @@ object CreateStoryboard {
   implicit def iso3 = ConformationAnnotation.iso
   implicit val (p2, u2) = picklerUnpickler[ConformationAnnotation].create()
   implicit val (p, u) = picklerUnpickler[Storyboard].create()
+  val (pickler, unpickler) = picklerUnpickler[CreateStoryboard].create()
   PicklerRegistry2.register(picklerUnpickler[CreateStoryboard].create())
-}
-
-case class CreateStoryboardResponse(sb: String) extends MsgFromServer {
-  def clientDo(client: AylaClient, oosReply: ObjectOutputStream): Unit = {}
-}
-object CreateStoryboardResponse {
-  implicit def iso = Iso.hlist(apply _, unapply _)
 }

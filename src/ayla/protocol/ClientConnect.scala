@@ -12,14 +12,16 @@ import ayla.client._
 import ayla.server._
 import java.io._
 import ayla.client.ui.ConfirmationDialog
-
 import shapeless._
+
 import ayla.pickling2.Pickling._
 import ayla.pickling2.DefaultPicklers._
 import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
+import ayla.pickling2.Picklable
 
-case class ClientConnectRequest(username: String) extends MsgFromClient {
+case class ClientConnectRequest(username: String) extends MsgFromClient with Picklable {
+	def pickled: String = ClientConnectRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     println("server is trying to register username:  " + username)
     server.userSessions.find(_.username == username) match {
@@ -30,10 +32,13 @@ case class ClientConnectRequest(username: String) extends MsgFromClient {
 }
 object ClientConnectRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[ClientConnectRequest].create()
+  
   PicklerRegistry2.register(picklerUnpickler[ClientConnectRequest].create())
 }
 
 case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, message: String) extends MsgFromServer {
+  def pickled: String = ClientConnectResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
     if (connectionAccepted) {
       println("Connection accepted!")
@@ -53,5 +58,6 @@ case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, 
 }
 object ClientConnectResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[ClientConnectResponse].create()
   PicklerRegistry2.register(picklerUnpickler[ClientConnectResponse].create())
 }

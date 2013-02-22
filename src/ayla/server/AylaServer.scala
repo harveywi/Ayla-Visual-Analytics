@@ -26,8 +26,22 @@ import java.util.Date
 import ayla.protocol.RefreshChatLogRequest
 import ayla.collab.Storyboard
 import ayla.protocol.RefreshStoryboardsRequest
+import ayla.pickling2.Pickling._
+import shapeless._
+import ayla.pickling2.DefaultPicklers._
+import ayla.pickling2.DefaultUnpicklers._
+import ayla.pickling2.PicklerRegistry2
+import ayla.pickling2.Picklable
 
-case class ProjInfo(datasetName: String, projName: String, sfName: String) extends Serializable
+case class ProjInfo(datasetName: String, projName: String, sfName: String) extends Picklable{
+	def pickled: String = ProjInfo.pickler.pickle(this)
+}
+
+object ProjInfo {
+  implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[ProjInfo].create()
+}
+
 case class UserSession(
   username: String,
   projInfo: ProjInfo,
@@ -73,6 +87,8 @@ class AylaServer(val datasetsRootDir: File) {
     val annotationFile = new File(datasetsRootDir, "annotations.dat")
     if (annotationFile.exists) {
       withObjectInputStream(annotationFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]])
+      
+      
     } else {
       new mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]
     }
@@ -113,7 +129,18 @@ class AylaServer(val datasetsRootDir: File) {
       case Some(session) =>
         val annotations = annotationMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[ConformationAnnotation])
         annotations += annotation
+        
+//        withObjectOutputStream(new File(datasetsRootDir, "annotations.dat")) {oos =>
+//          annotationMap.foreach{case (projInfo, annotationList) =>
+//            oos.writeObject(projInfo.pickled)
+//            annotationList.foreach(annotation => oos.writeObject(annotation.pickled))
+//          }
+//        }
+        
         withObjectOutputStream(new File(datasetsRootDir, "annotations.dat"))(_.writeObject(annotationMap))
+        
+        
+        
         userSessions.filter(_.projInfo == session.projInfo).foreach { session =>
           val actor = usernameToServerActor(session.username)
           actor ! RefreshAnnotationsRequest(session.username)

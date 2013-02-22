@@ -13,14 +13,16 @@ import ayla.server._
 import java.io._
 import org.jgrapht.alg.DijkstraShortestPath
 import scala.collection.JavaConverters._
-
-import shapeless._
+import shapeless.Iso
+import shapeless.Iso.{identityIso => _}
 import ayla.pickling2.Pickling._
 import ayla.pickling2.DefaultPicklers._
 import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
+import ayla.pickling2.Picklable
 
 case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: Int) extends MsgFromClient{
+  def pickled: String = GetDomainShortestPathRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
     val domainGraph = server.userSessions.find(_.username == username).map { session => session.domainGraph }.get
 
@@ -44,15 +46,18 @@ case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: I
 
 object GetDomainShortestPathRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetDomainShortestPathRequest].create()
   PicklerRegistry2.register(picklerUnpickler[GetDomainShortestPathRequest].create())
 }
 
 case class GetDomainShortestPathResponse(pathVerts: Array[Int]) extends MsgFromServer {
+  def pickled: String = GetDomainShortestPathResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
   	client.EventStreams.domainShortestPath.fire(pathVerts)
   }
 }
 object GetDomainShortestPathResponse {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[GetDomainShortestPathResponse].create()
   PicklerRegistry2.register(picklerUnpickler[GetDomainShortestPathResponse].create())
 }

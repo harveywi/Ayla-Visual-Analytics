@@ -15,6 +15,7 @@ import ayla.protocol._
 import java.io._
 import scala.collection.mutable.ArrayBuffer
 import java.net._
+import ayla.pickling2.PicklerRegistry2
 
 class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
   val out = new ObjectOutputStream(socket.getOutputStream())
@@ -22,7 +23,18 @@ class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
   val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
 
   def receive = {
-    case _ => ???
+//    case _ => ???
+    case s: String =>
+      PicklerRegistry2.unpickle(s) match {
+        case Some(m: ClientConnectRequest) =>
+          println(s"Associating user name ${m.username} with an actor.")
+          aylaServer.usernameToServerActor(m.username) = self
+          m.serverDo(aylaServer, out)
+        case Some(m: MsgFromClient) =>
+          println("Server received message from client:  " + m)
+          m.serverDo(aylaServer, out)
+        case x @ _ => println("Server received weird message:  " + s)
+      }
 //    case m: ClientConnectRequest =>
 //      println(s"Associating user name ${m.username} with an actor.")
 //      aylaServer.usernameToServerActor(m.username) = self

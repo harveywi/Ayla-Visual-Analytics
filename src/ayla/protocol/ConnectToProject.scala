@@ -32,6 +32,7 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient {
+  def pickled: String = ConnectToProjectRequest.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = {	
     val datasetDir = new File(server.datasetsRootDir, datasetName)
     
@@ -84,10 +85,12 @@ case class ConnectToProjectRequest(datasetName: String, projName: String, sfName
 
 object ConnectToProjectRequest {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[ConnectToProjectRequest].create()
   PicklerRegistry2.register(picklerUnpickler[ConnectToProjectRequest].create())
 }
 
 case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer {
+  def pickled: String = ConnectToProjectResponse.pickler.pickle(this)
   def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = replyWith(oosClient) {
     client.ct = ContourTree(proj.sf).simplify(65)
     client.sf = proj.sf
@@ -104,5 +107,7 @@ object ConnectToProjectResponse {
   implicit def iso3 = ScalarFunction.iso
   implicit val (p1, u1) = picklerUnpickler[ScalarFunction].create()
   implicit val (p2, u2) = picklerUnpickler[CollaborationProject].create()
+  
+  val (pickler, unpickler) = picklerUnpickler[ConnectToProjectResponse].create()
   PicklerRegistry2.register(picklerUnpickler[ConnectToProjectResponse].create())
 }

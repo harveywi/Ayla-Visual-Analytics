@@ -25,11 +25,13 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class CreateChatMessage(username: String, message: String) extends MsgFromClient{
+  def pickled: String = CreateChatMessage.pickler.pickle(this)
   def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logChatMessage(username, message)
 }
 
 object CreateChatMessage {
   implicit def iso = Iso.hlist(apply _, unapply _)
+  val (pickler, unpickler) = picklerUnpickler[CreateChatMessage].create()
   PicklerRegistry2.register(picklerUnpickler[CreateChatMessage].create())
 //  makeUnpickler(iso,  parse(_.toString) :: parse(_.toString) :: HNil)
 }
