@@ -11,7 +11,8 @@ package ayla.client
 
 import java.io._
 import scala.concurrent.Await
-import scala.concurrent.util.duration.intToDurationInt
+import scala.concurrent.duration._
+import akka.util.Timeout
 import scala.swing.Publisher
 import scala.util.matching.Regex
 import akka.actor._

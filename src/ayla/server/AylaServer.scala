@@ -17,8 +17,7 @@ import akka.actor.Props
 import scala.collection._
 import java.net._
 import org.jgrapht.graph._
-import ayla.collab.AylaAnnotation
-import ayla.util.IO._
+import ayla.util.IO.{withDataInputStream, withDataOutputStream}
 import ayla.collab.ConformationAnnotation
 import akka.actor.ActorRef
 import ayla.protocol.RefreshAnnotationsRequest
@@ -32,6 +31,7 @@ import ayla.pickling2.DefaultPicklers._
 import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
+import ayla.pickling2.Pickler
 
 case class ProjInfo(datasetName: String, projName: String, sfName: String) extends Picklable{
 	def pickled(daos: java.io.DataOutputStream) = ProjInfo.pickler.pickle(this, daos)
@@ -86,9 +86,15 @@ class AylaServer(val datasetsRootDir: File) {
   val annotationMap: mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]] = {
     val annotationFile = new File(datasetsRootDir, "annotations.dat")
     if (annotationFile.exists) {
-      withObjectInputStream(annotationFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]])
-      
-      
+//      withObjectInputStream(annotationFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]])
+      withDataInputStream(annotationFile){dais =>
+        implicit val up1 = ProjInfo.unpickler
+        implicit val up2 = ConformationAnnotation.unpickler
+        val m = mapUnpickler[ProjInfo, Array[ConformationAnnotation]].unpickle(dais).mapValues(_.to[mutable.ArrayBuffer])
+        val ret = mutable.HashMap.empty[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]
+        m.foreach(entry => ret += entry)
+        ret
+      }
     } else {
       new mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]]
     }
@@ -97,16 +103,31 @@ class AylaServer(val datasetsRootDir: File) {
   val chatMap: mutable.HashMap[ProjInfo, mutable.ArrayBuffer[String]] = {
     val chatFile = new File(datasetsRootDir, "chatLog.dat")
     if (chatFile.exists) {
-      withObjectInputStream(chatFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[String]]])
+      withDataInputStream(chatFile){dais =>
+        implicit val up = ProjInfo.unpickler
+        val m = mapUnpickler[ProjInfo, Array[String]].unpickle(dais).mapValues(_.to[mutable.ArrayBuffer])
+        val ret = mutable.HashMap.empty[ProjInfo, mutable.ArrayBuffer[String]]
+        m.foreach(entry => ret += entry)
+        ret
+      }
     } else {
-      new mutable.HashMap[ProjInfo, mutable.ArrayBuffer[String]]
+      mutable.HashMap.empty[ProjInfo, mutable.ArrayBuffer[String]]
     }
   }
   
   val storyboardMap: mutable.HashMap[ProjInfo, mutable.ArrayBuffer[Storyboard]] = {
     val storyboardFile = new File(datasetsRootDir, "storyboards.dat")
     if (storyboardFile.exists) {
-      withObjectInputStream(storyboardFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[Storyboard]]])
+      withDataInputStream(storyboardFile){dais =>
+        implicit val up1 = ProjInfo.unpickler
+        implicit val up2 = Storyboard.unpickler
+        implicit val up3 = ConformationAnnotation.unpickler
+        val ret = mutable.HashMap.empty[ProjInfo, mutable.ArrayBuffer[Storyboard]]
+        val m = mapUnpickler[ProjInfo, Array[Storyboard]].unpickle(dais).mapValues(_.to[mutable.ArrayBuffer])
+        m.foreach(entry => ret += entry)
+        ret
+      }
+//      withObjectInputStream(storyboardFile)(_.readObject.asInstanceOf[mutable.HashMap[ProjInfo, mutable.ArrayBuffer[Storyboard]]])
     } else {
       new mutable.HashMap[ProjInfo, mutable.ArrayBuffer[Storyboard]]
     }
@@ -129,18 +150,14 @@ class AylaServer(val datasetsRootDir: File) {
       case Some(session) =>
         val annotations = annotationMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[ConformationAnnotation])
         annotations += annotation
-        
-//        withObjectOutputStream(new File(datasetsRootDir, "annotations.dat")) {oos =>
-//          annotationMap.foreach{case (projInfo, annotationList) =>
-//            oos.writeObject(projInfo.pickled)
-//            annotationList.foreach(annotation => oos.writeObject(annotation.pickled))
-//          }
-//        }
-        
-        withObjectOutputStream(new File(datasetsRootDir, "annotations.dat"))(_.writeObject(annotationMap))
-        
-        
-        
+        withDataOutputStream(new File(datasetsRootDir, "annotations.dat")){daos =>
+          implicit val p1 = ConformationAnnotation.pickler
+          implicit val p2 = ProjInfo.pickler
+          val am = annotationMap.map{case (key, value) =>
+            key -> value.toArray
+          }.toMap
+          pickled(am, daos)
+        }
         userSessions.filter(_.projInfo == session.projInfo).foreach { session =>
           val actor = usernameToServerActor(session.username)
           actor ! RefreshAnnotationsRequest(session.username)
@@ -153,8 +170,15 @@ class AylaServer(val datasetsRootDir: File) {
     userSessions.find(_.username == username) match {
       case Some(session) =>
         val chats = chatMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[String])
-        chats += s"[${new Date().toString}] ${username} > ${message}"//List(new Date().toString, username, message).mkString("\t")
-        withObjectOutputStream(new File(datasetsRootDir, "chatLog.dat"))(_.writeObject(chatMap))
+        chats += s"[${new Date().toString}] ${username} > ${message}"
+        withDataOutputStream(new File(datasetsRootDir, "chatLot.dat")){daos =>
+          implicit val p = ProjInfo.pickler
+          val m = chatMap.map{case (key, value) =>
+            key -> value.toArray
+          }.toMap
+          pickled(m, daos)
+        }
+//        withObjectOutputStream(new File(datasetsRootDir, "chatLog.dat"))(_.writeObject(chatMap))
         userSessions.filter(_.projInfo == session.projInfo).foreach { session =>
           val actor = usernameToServerActor(session.username)
           actor ! RefreshChatLogRequest(session.username)
@@ -168,7 +192,22 @@ class AylaServer(val datasetsRootDir: File) {
       case Some(session) =>
         val storyboards = storyboardMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[Storyboard])
         storyboards += storyboard
-        withObjectOutputStream(new File(datasetsRootDir, "storyboards.dat"))(_.writeObject(storyboardMap))
+//        withObjectOutputStream(new File(datasetsRootDir, "storyboards.dat"))(_.writeObject(storyboardMap))
+        withDataOutputStream(new File(datasetsRootDir, "storyboards.dat")){daos =>
+          implicit val p1 = Storyboard.pickler
+          implicit val p2 = ConformationAnnotation.pickler
+          implicit val p3 = ProjInfo.pickler
+          
+          val m = storyboardMap.map{case (key, value) =>
+            key -> value.toArray
+          }.toMap
+          pickled(m, daos)
+//          implicit val p1 = Storyboard.pickler
+//          implicit val p2 = ConformationAnnotation.iso
+//          implicit val p3 = ConformationAnnotation.iso
+//          implicit val p4 = ConformationAnnotation.pickler
+//          pickled(storyboards.toArray, daos)
+        }
         userSessions.filter(_.projInfo == session.projInfo).foreach{session =>
           val actor = usernameToServerActor(session.username)
           actor ! RefreshStoryboardsRequest(session.username)

@@ -25,7 +25,6 @@ case class Storyboard(val name: String, val annotations: Array[ConformationAnnot
 
 object Storyboard {
   implicit def iso = Iso.hlist(Storyboard.apply _, Storyboard.unapply _)
-  implicit def iso2 = ConformationAnnotation.iso
   implicit val (p, u) = picklerUnpickler[ConformationAnnotation].create()
-  PicklerRegistry2.register(picklerUnpickler[Storyboard].create())
+  val (pickler, unpickler) = picklerUnpickler[Storyboard].create()
 }

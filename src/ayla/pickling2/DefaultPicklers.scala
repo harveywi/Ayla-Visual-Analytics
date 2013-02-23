@@ -8,6 +8,9 @@ import akka.util.ByteStringBuilder
 import java.io.DataOutputStream
 
 trait DefaultPicklers {
+  
+  def pickled[T](t: T, daos: DataOutputStream)(implicit p: Pickler[T]): Unit = p.pickle(t, daos)
+  
   implicit val intPickler: Pickler[Int] = new Pickler[Int] {
     def pickle(i: Int, daos: DataOutputStream) = daos.writeInt(i)
   }

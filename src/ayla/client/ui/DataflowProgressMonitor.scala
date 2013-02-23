@@ -11,7 +11,6 @@ package ayla.client.ui
 
 import akka.actor._
 import akka.dispatch._
-import scala.concurrent.util.Duration
 import scala.concurrent.{Promise, Future, ExecutionContext}
 
 trait DataflowProgressMonitor {

@@ -15,8 +15,10 @@ import ayla.pickling2.DefaultPicklers._
 import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
+import java.util.Date
 
-case class ConformationAnnotation(val name: String, val sampledConformationID: Int, val terrainCameraTransform: Array[Double], val pdbLines: Array[String]) extends AylaAnnotation with Picklable {
+case class ConformationAnnotation(val name: String, val sampledConformationID: Int, val terrainCameraTransform: Array[Double], val pdbLines: Array[String], val timestamp: String) extends Picklable {
+  var visible = true
   def pickled(daos: java.io.DataOutputStream) = ConformationAnnotation.pickler.pickle(this, daos)
 }
 

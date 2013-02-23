@@ -13,8 +13,9 @@ import java.io._
 import scala.io.Source
 import ayla.pdb._
 import ayla.dataset.CachedDataset
-import scalaz.{ Validation, Success, Failure }
+import scalaz._
 import scalaz.Validation._
+import Scalaz._
 import org.apache.commons.compress.archivers.zip.ZipFile
 import ayla.util.tools._
 import ayla.util.Timing
@@ -78,14 +79,16 @@ object DomainApproximator {
       case _ => Failure(usage)
     }
 
-    def splitArgs = args match {
-      case Array(filterFlagArg, filterFileArg, kArg, datasetDirArg, outputFunctionName) => Success((Some(filterFlagArg, filterFileArg), kArg, datasetDirArg, outputFunctionName))
-      case Array(kArg, datasetDirArg, outputFunctionName) => Success((None, kArg, datasetDirArg, outputFunctionName))
+    case class SplitArgs(filterFlags: Option[(String, String)], kArg: String, datasetDirArg: String, outputFunctionName: String)
+    def splitArgs: Validation[String, SplitArgs] = args match {
+      case Array(filterFlagArg, filterFileArg, kArg, datasetDirArg, outputFunctionName) => Success(SplitArgs(Some(filterFlagArg, filterFileArg), kArg, datasetDirArg, outputFunctionName))
+      case Array(kArg, datasetDirArg, outputFunctionName) => Success(SplitArgs(None, kArg, datasetDirArg, outputFunctionName))
       case _ => Failure(usage)
     }
-
+    
     for {
-      (filterArgsOpt, kArg, datasetDirArg, outputFunctionName) <- splitArgs
+      splitArgs <- splitArgs
+      SplitArgs(filterArgsOpt, kArg, datasetDirArg, outputFunctionName) = splitArgs
       filter <- getFilter(filterArgsOpt)
       k <- getK(kArg)
       datasetDir <- getDatasetDir(datasetDirArg)
@@ -98,6 +101,7 @@ object DomainApproximator {
     } yield {
       (filter, k, datasetDir, outputFile)
     }
+    ???
   }
 
   def buildDomain(filter: Filter, k: Int, datasetDir: File, outputFile: File) = {

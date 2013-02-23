@@ -58,7 +58,7 @@ class CreateConformationAnnotationDialog(sampledConformationID: Int, pdbLines: A
         reactions += {
           case e: ButtonClicked => {
             
-            val annotation = new ConformationAnnotation(nameTextField.text, sampledConformationID, terrainCameraTransform, pdbLines)
+            val annotation = new ConformationAnnotation(nameTextField.text, sampledConformationID, terrainCameraTransform, pdbLines, new java.util.Date().toString)
             result = Some(annotation)
             close()
           }

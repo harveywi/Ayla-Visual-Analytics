@@ -24,6 +24,9 @@ object IO {
   
   def withGzippedObjectInputStream[T](f: File)(op: ObjectInputStream => T): T = get(new ObjectInputStream(new GZIPInputStream(new FileInputStream(f))), op)
   def withGzippedObjectOutputStream[T](f: File)(op: ObjectOutputStream => T): T = put(new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(f))), op)
+  
+  def withDataInputStream[T](f: File)(op: DataInputStream => T): T = get(new DataInputStream(new BufferedInputStream(new FileInputStream(f))), op)
+  def withDataOutputStream[T](f: File)(op: DataOutputStream => T): T = get(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))), op)
 
   def withFileChannel[T](f: File)(op: FileChannel => T): T = {
     val out = new FileOutputStream(f)
