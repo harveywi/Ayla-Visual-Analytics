@@ -21,8 +21,9 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
 
 case class ClientConnectRequest(username: String) extends MsgFromClient with Picklable {
-	def pickled: String = ClientConnectRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+	def pickled(daos: java.io.DataOutputStream) = ClientConnectRequest.pickler.pickle(this, daos)
+	
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     println("server is trying to register username:  " + username)
     server.userSessions.find(_.username == username) match {
       case Some(_) => ClientConnectResponse(username, false, s"Someone already registered that user name ($username).")
@@ -38,12 +39,12 @@ object ClientConnectRequest {
 }
 
 case class ClientConnectResponse(userName: String, connectionAccepted: Boolean, message: String) extends MsgFromServer {
-  def pickled: String = ClientConnectResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = ClientConnectResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     if (connectionAccepted) {
       println("Connection accepted!")
       client.userName = userName
-      replyWith(oosClient) {
+      replyWith(daosClient) {
         // Request the list of collaboration projects
         GetCollabProjectsRequest(userName)
       }

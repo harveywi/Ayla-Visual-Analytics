@@ -22,8 +22,8 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
 
 case class GetDomainShortestPathRequest(username: String, idStart: Int, idEnd: Int) extends MsgFromClient{
-  def pickled: String = GetDomainShortestPathRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetDomainShortestPathRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     val domainGraph = server.userSessions.find(_.username == username).map { session => session.domainGraph }.get
 
     val dsp = new DijkstraShortestPath(domainGraph, idStart, idEnd)
@@ -51,8 +51,8 @@ object GetDomainShortestPathRequest {
 }
 
 case class GetDomainShortestPathResponse(pathVerts: Array[Int]) extends MsgFromServer {
-  def pickled: String = GetDomainShortestPathResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetDomainShortestPathResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
   	client.EventStreams.domainShortestPath.fire(pathVerts)
   }
 }

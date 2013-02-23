@@ -9,25 +9,30 @@
 package ayla.protocol
 
 import akka.actor.{ Actor, ActorRef }
-import java.io.ObjectInputStream
+import java.io.{ DataInputStream, BufferedInputStream }
 import java.io.EOFException
 
 case object SocketDead
-class SocketReaderActor(owner: ActorRef, in: ObjectInputStream) extends Actor {
-  case object ListenToSocket
+case object ListenToSocket
+class SocketReaderActor(owner: ActorRef, in: DataInputStream, inBuff: BufferedInputStream) extends Actor {
   self ! ListenToSocket
-  def blockForSocketMessage(): Any = try { in.readObject } catch {
+  def blockForSocketMessage(): String = try {
+    inBuff.mark(Int.MaxValue)
+    val msg = in.readUTF
+    inBuff.reset()
+    msg
+  } catch {
     case _@ e: Exception => {
       println("Got an exception:  " + e)
       println("Shutting down this actor.")
-      owner ! SocketDead 
+      owner ! SocketDead
       context.stop(self)
+      ""
     }
   }
   def waitOnSocket: Receive = {
     case ListenToSocket =>
       val msg = blockForSocketMessage()
-      self ! ListenToSocket
       owner ! msg
   }
   def receive = waitOnSocket

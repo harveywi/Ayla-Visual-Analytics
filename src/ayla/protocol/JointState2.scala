@@ -18,30 +18,26 @@ import reactive._
 import ayla.pickling2.Picklable
 
 sealed trait AylaMsg extends Picklable {
-  def replyWith(oos: ObjectOutputStream)(op: => AylaMsg) = {
-//    val x = op
-//    val pickle = x.pickle
-//    oos.writeObject(pickle)
-//    oos.flush()
+  def replyWith(daos: DataOutputStream)(op: => AylaMsg) = {
     val x = op
-    oos.writeObject(x.pickled)
-    oos.flush()
+    x.pickled(daos)
+    daos.flush()
   }
 }
 
 trait MsgFromClient extends AylaMsg {
-  def serverDo(server: AylaServer, oosReply: ObjectOutputStream)
+  def serverDo(server: AylaServer, daosReply: DataOutputStream)
 }
 
 trait MsgFromServer extends AylaMsg {
-  def clientDo(client: AylaClient, oosReply: ObjectOutputStream)
+  def clientDo(client: AylaClient, daosReply: DataOutputStream)
 }
 
 trait MsgFromServerReactive[T <: Serializable] extends MsgFromServer with Picklable {
   def data: T
   def es(client: AylaClient): EventSource[T]
   
-  override def clientDo(client: AylaClient, oosReply: ObjectOutputStream): Unit = {
+  override def clientDo(client: AylaClient, daosReply: DataOutputStream): Unit = {
     println("MsgFromServerReactive serverDo was called")
     es(client).fire(data)
   }

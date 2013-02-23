@@ -19,8 +19,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetPDBLinesRequest(username: String, iSampled: Int) extends MsgFromClient {
-  def pickled: String = GetPDBLinesRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetPDBLinesRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     val (proj, dataset) = server.userSessions.find(_.username == username).map { session => (session.collabProject, session.dataset) }.get
     val pdbLines = dataset.pdbStreamProvider.getPDBLines(proj.sampledToUnsampled(iSampled))
     
@@ -35,8 +35,8 @@ object GetPDBLinesRequest {
 }
 
 case class GetPDBLinesResponse(pdbLines: Array[String]) extends MsgFromServer {
-  def pickled: String = GetPDBLinesResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetPDBLinesResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     client.EventStreams.pdbLines.fire(pdbLines)
   }
 }

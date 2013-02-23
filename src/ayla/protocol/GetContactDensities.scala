@@ -20,8 +20,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetContactDensitiesRequest(username: String, residues: Array[Int]) extends MsgFromClient {
-  def pickled: String = GetContactDensitiesRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetContactDensitiesRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     // This finds all matches in the unsampled dataset.
     val densities = server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -40,8 +40,8 @@ object GetContactDensitiesRequest {
 }
 
 case class GetContactDensitiesResponse(densities: Array[Int]) extends MsgFromServer {
-  def pickled: String = GetContactDensitiesResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetContactDensitiesResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     client.EventStreams.contactDensities.fire(densities)
   }
 }

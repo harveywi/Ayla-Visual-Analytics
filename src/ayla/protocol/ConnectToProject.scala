@@ -32,8 +32,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class ConnectToProjectRequest(datasetName: String, projName: String, sfName: String, userName: String) extends MsgFromClient {
-  def pickled: String = ConnectToProjectRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = {	
+  def pickled(daos: java.io.DataOutputStream) = ConnectToProjectRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = {	
     val datasetDir = new File(server.datasetsRootDir, datasetName)
     
     val dataset = server.userSessions.find(session => session.projInfo.datasetName == datasetName).map(session => Success(session.dataset)).getOrElse {
@@ -76,7 +76,7 @@ case class ConnectToProjectRequest(datasetName: String, projName: String, sfName
       
       server.userSessions += UserSession(userName, ProjInfo(datasetName, projName, sfName), dataset, collabProj)
       
-      replyWith(oosServer) {
+      replyWith(daosServer) {
         ConnectToProjectResponse(collabProj)
       }
     }
@@ -90,8 +90,8 @@ object ConnectToProjectRequest {
 }
 
 case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromServer {
-  def pickled: String = ConnectToProjectResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = replyWith(oosClient) {
+  def pickled(daos: java.io.DataOutputStream) = ConnectToProjectResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = replyWith(daosClient) {
     client.ct = ContourTree(proj.sf).simplify(65)
     client.sf = proj.sf
     println("Preparing to calculate contour tree edge areas")

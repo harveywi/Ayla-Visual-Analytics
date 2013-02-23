@@ -27,8 +27,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class RefreshAnnotationsRequest(username: String) extends MsgFromClient {
-  def pickled: String = RefreshAnnotationsRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = RefreshAnnotationsRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val annotations = server.annotationMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[ConformationAnnotation]).toArray
@@ -45,8 +45,8 @@ object RefreshAnnotationsRequest {
 }
 
 case class RefreshAnnotationsResponse(annotations: Array[ConformationAnnotation]) extends MsgFromServer {
-  def pickled = RefreshAnnotationsResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = RefreshAnnotationsResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     val curAnnotationSet = client.collabFrame.annotationListView.listData.map(listItem => (listItem.annotation, listItem)).toMap
     val newListItems = annotations.map{a =>
       curAnnotationSet.get(a) match {

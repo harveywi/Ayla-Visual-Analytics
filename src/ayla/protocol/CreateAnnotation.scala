@@ -25,8 +25,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class CreateAnnotationRequest(username: String, annotation: ConformationAnnotation) extends MsgFromClient {
-  def pickled = CreateAnnotationRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logAnnotation(username, annotation)
+  def pickled(daos: java.io.DataOutputStream) = CreateAnnotationRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, oosServer: DataOutputStream) = server.logAnnotation(username, annotation)
 }
 
 object CreateAnnotationRequest {

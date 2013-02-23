@@ -17,7 +17,7 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
 
 case class ConformationAnnotation(val name: String, val sampledConformationID: Int, val terrainCameraTransform: Array[Double], val pdbLines: Array[String]) extends AylaAnnotation with Picklable {
-  def pickled: String = ConformationAnnotation.pickler.pickle(this)
+  def pickled(daos: java.io.DataOutputStream) = ConformationAnnotation.pickler.pickle(this, daos)
 }
 
 object ConformationAnnotation {

@@ -25,8 +25,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class CreateChatMessage(username: String, message: String) extends MsgFromClient{
-  def pickled: String = CreateChatMessage.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logChatMessage(username, message)
+  def pickled(daos: java.io.DataOutputStream) = CreateChatMessage.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, oosServer: DataOutputStream) = server.logChatMessage(username, message)
 }
 
 object CreateChatMessage {

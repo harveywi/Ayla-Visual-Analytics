@@ -20,8 +20,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetColorFunctionRequest(username: String, file: File) extends MsgFromClient {
-  def pickled: String = GetColorFunctionRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetColorFunctionRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     // This finds all matches in the unsampled dataset.
     val func = server.userSessions.find(_.username == username) match {
       case Some(session) =>
@@ -40,8 +40,8 @@ object GetColorFunctionRequest {
 }
 
 case class GetColorFunctionResponse(f: Array[Float]) extends MsgFromServer {
-  def pickled: String = GetColorFunctionResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetColorFunctionResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     client.EventStreams.colorFunction.fire(f)
   }
 }

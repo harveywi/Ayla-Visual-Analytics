@@ -34,7 +34,7 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
 
 case class ProjInfo(datasetName: String, projName: String, sfName: String) extends Picklable{
-	def pickled: String = ProjInfo.pickler.pickle(this)
+	def pickled(daos: java.io.DataOutputStream) = ProjInfo.pickler.pickle(this, daos)
 }
 
 object ProjInfo {

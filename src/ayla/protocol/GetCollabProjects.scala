@@ -24,8 +24,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetCollabProjectsRequest(userName: String) extends MsgFromClient {
-  def pickled: String = GetCollabProjectsRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetCollabProjectsRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     println("Server is preparing the list of collaboration projects")
     GetCollabProjectsResponse(server.datasets, server.scalarFunctions)
   }
@@ -37,8 +37,8 @@ object GetCollabProjectsRequest {
 }
 
 case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], scalarFunctionMap: Map[String, Array[String]]) extends MsgFromServer {
-  def pickled: String = GetCollabProjectsResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetCollabProjectsResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     println("Got the stuff!")
     projHierarchy.foreach(println)
     // Show the pie menu with the various projects 
@@ -66,7 +66,7 @@ case class GetCollabProjectsResponse(projHierarchy: Map[String, Array[String]], 
       case Some(projDescriptor) => {
         println("You chose a project descriptor:  " + projDescriptor)
         // Request the project from the server
-        replyWith(oosClient) { ConnectToProjectRequest(projDescriptor.datasetName, projDescriptor.projName, projDescriptor.scalarFunctionName, client.userName) }
+        replyWith(daosClient) { ConnectToProjectRequest(projDescriptor.datasetName, projDescriptor.projName, projDescriptor.scalarFunctionName, client.userName) }
       }
       case None => System.exit(0)
     }

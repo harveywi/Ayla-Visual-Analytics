@@ -23,8 +23,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array[Int]]) extends MsgFromClient {
-  def pickled: String = GetContourTreeAreasRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = GetContourTreeAreasRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     println("Contour tree edge area request received.")
 
     println("Server is estimating areas.")
@@ -46,8 +46,8 @@ object GetContourTreeAreasRequest {
 }
 
 case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[Array[Char]], scalarArrays: Array[File]) extends MsgFromServer {
-  def pickled: String = GetContourTreeAreasResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = GetContourTreeAreasResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct
     edges.iterator.zip(areas.iterator).foreach { case (e, area) => e.area = area }
 

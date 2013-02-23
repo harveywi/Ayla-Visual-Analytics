@@ -29,8 +29,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 
 case class RefreshStoryboardsRequest(username: String) extends MsgFromClient {
-  def pickled: String = RefreshStoryboardsRequest.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = replyWith(oosServer) {
+  def pickled(daos: java.io.DataOutputStream) = RefreshStoryboardsRequest.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, daosServer: DataOutputStream) = replyWith(daosServer) {
     server.userSessions.find(_.username == username) match {
       case Some(session) =>
         val storyboards = server.storyboardMap.getOrElseUpdate(session.projInfo, new mutable.ArrayBuffer[Storyboard]).toArray
@@ -47,8 +47,8 @@ object RefreshStoryboardsRequest {
 }
 
 case class RefreshStoryboardsResponse(storyboardsFromServer: Array[Storyboard]) extends MsgFromServer {
-  def pickled: String = RefreshStoryboardsResponse.pickler.pickle(this)
-  def clientDo(client: AylaClient, oosClient: ObjectOutputStream) = {
+  def pickled(daos: java.io.DataOutputStream) = RefreshStoryboardsResponse.pickler.pickle(this, daos)
+  def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
 
     val curAnnotations = client.collabFrame.annotationListView.listData.map(_.annotation)
     val storyboards = storyboardsFromServer.map { storyboard =>

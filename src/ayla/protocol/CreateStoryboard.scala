@@ -20,8 +20,8 @@ import ayla.pickling2.PicklerRegistry2
 import ayla.collab.ConformationAnnotation
 
 case class CreateStoryboard(username: String, storyboard: Storyboard) extends MsgFromClient {
-  def pickled: String = CreateStoryboard.pickler.pickle(this)
-  def serverDo(server: AylaServer, oosServer: ObjectOutputStream) = server.logStoryboard(username, storyboard)
+  def pickled(daos: java.io.DataOutputStream) = CreateStoryboard.pickler.pickle(this, daos)
+  def serverDo(server: AylaServer, oosServer: DataOutputStream) = server.logStoryboard(username, storyboard)
 }
 
 object CreateStoryboard {

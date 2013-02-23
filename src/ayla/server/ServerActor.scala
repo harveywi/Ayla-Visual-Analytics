@@ -18,30 +18,32 @@ import java.net._
 import ayla.pickling2.PicklerRegistry2
 
 class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
-  val out = new ObjectOutputStream(socket.getOutputStream())
-  val in = new ObjectInputStream(new DataInputStream(socket.getInputStream()))
-  val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
+  val out = new DataOutputStream(socket.getOutputStream)
+  val inBuff = new BufferedInputStream(socket.getInputStream)
+  val in = new DataInputStream(inBuff)
+  val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in, inBuff)))
 
   def receive = {
-//    case _ => ???
-    case s: String =>
-      PicklerRegistry2.unpickle(s) match {
-        case Some(m: ClientConnectRequest) =>
+    case className: String if !className.isEmpty=>
+      PicklerRegistry2.unpickle(className, in) match {
+        case m: ClientConnectRequest =>
+          socketReaderActor ! ListenToSocket
           println(s"Associating user name ${m.username} with an actor.")
           aylaServer.usernameToServerActor(m.username) = self
           m.serverDo(aylaServer, out)
-        case Some(m: MsgFromClient) =>
+        case m: MsgFromClient =>
+          socketReaderActor ! ListenToSocket
           println("Server received message from client:  " + m)
           m.serverDo(aylaServer, out)
-        case x @ _ => println("Server received weird message:  " + s)
+        case x @ _ => println("Server received unexpected message:  " + className)
       }
 //    case m: ClientConnectRequest =>
 //      println(s"Associating user name ${m.username} with an actor.")
 //      aylaServer.usernameToServerActor(m.username) = self
 //      m.serverDo(aylaServer, out)
-//    case m: MsgFromClient => 
-//      println("Server received message from client:  " + m)
-//      m.serverDo(aylaServer, out)
+    case m: MsgFromClient => 
+      println("Server received message from client:  " + m)
+      m.serverDo(aylaServer, out)
 //    case x @ _ => println("Server received weird message:  " + x)
   }
 }

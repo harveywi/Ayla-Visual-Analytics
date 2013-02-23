@@ -20,28 +20,35 @@ import ayla.pickling2.Picklable
 
 class ClientActor(aylaClient: AylaClient) extends Actor {
 
-  var out: ObjectOutputStream = null
-  var in: ObjectInputStream = null
+  var out: DataOutputStream = null
+  
+  var inBuff: BufferedInputStream = null
+  var in: DataInputStream = null
+  var socketReaderActor: ActorRef = null
 
   def receive = {
     case loginInfo: LoginInfo =>
-      out = new ObjectOutputStream(new DataOutputStream(loginInfo.socket.getOutputStream()))
+      out = new DataOutputStream(loginInfo.socket.getOutputStream)
       
-      in = new ObjectInputStream(loginInfo.socket.getInputStream())
-      val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in)))
-      out.writeObject(ClientConnectRequest(loginInfo.username).pickled)
+      inBuff = new BufferedInputStream(loginInfo.socket.getInputStream)
+      in = new DataInputStream(inBuff)
+      socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in, inBuff)))
+
+      ClientConnectRequest(loginInfo.username).pickled(out)
       out.flush
 
 //    case m: MsgFromServer =>
 //      m.clientDo(aylaClient, out)
     
-    case s: String =>
-      PicklerRegistry2.unpickle(s) match {
-        case Some(m: MsgFromServer) =>
+    case className: String =>
+      PicklerRegistry2.unpickle(className, in) match {
+        case m: MsgFromServer =>
           m.clientDo(aylaClient, out)
         case _ =>
-          throw new RuntimeException("Unexpected string message received:  " + s)
+          throw new RuntimeException("Unexpected unpickling occurred for class with name:  " + className)
       }
+      socketReaderActor ! ListenToSocket
+      
       
     case m: MsgFromClient =>
       println("ClientActor is sending message to server:  " + m)
@@ -49,7 +56,7 @@ class ClientActor(aylaClient: AylaClient) extends Actor {
         println(m.getClass)
         println("Not picklable:  " + m.getClass)
       }
-      out.writeObject(m.pickled)
+      m.pickled(out)
       out.flush
       
     case SocketDead =>

@@ -3,9 +3,10 @@ package ayla.pickling2
 //import shapeless._
 //import scala.reflect.ClassTag
 //import ayla.pickling2.Pickling._
+import java.io.DataOutputStream
 
 trait Picklable {
-	def pickled: String
+	def pickled(daos: DataOutputStream): Unit
 }
 
 //object Picklable {
