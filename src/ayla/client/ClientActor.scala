@@ -28,7 +28,7 @@ class ClientActor(aylaClient: AylaClient) extends Actor {
 
   def receive = {
     case loginInfo: LoginInfo =>
-      out = new DataOutputStream(loginInfo.socket.getOutputStream)
+      out = new DataOutputStream(new BufferedOutputStream(loginInfo.socket.getOutputStream))
       
       inBuff = new BufferedInputStream(loginInfo.socket.getInputStream)
       in = new DataInputStream(inBuff)

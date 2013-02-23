@@ -8,67 +8,39 @@ import akka.util.ByteStringBuilder
 import java.io.DataOutputStream
 
 trait DefaultPicklers {
-//  def p[T](t: T): ByteString = {
-//    val str = t.toString
-//    ByteString(s"${str.length} $str")
-//  }
-  
-//  def p(bs: ByteString): ByteString = {
-////  	ByteString(bs.length.toString) ++ ByteString(" ") ++ bs
-//    val bsb = new ByteStringBuilder
-//    bsb.putBytes(bs.length.toString.getBytes)
-//    bsb.putBytes(" ".getBytes)
-//    bsb.putBytes(bs.toArray)
-//    bsb.result.compact
-//  }
-  
   implicit val intPickler: Pickler[Int] = new Pickler[Int] {
-//    def pickle(i: Int) = p(ByteString(i.toString))
     def pickle(i: Int, daos: DataOutputStream) = daos.writeInt(i)
   }
 
   implicit val stringPickler: Pickler[String] = new Pickler[String] {
-//    def pickle(s: String) = p(ByteString(s.toString))
     def pickle(s: String, daos: DataOutputStream) = daos.writeUTF(s)
   }
   
   implicit val booleanPickler = new Pickler[Boolean] {
-//    def pickle(b: Boolean) = p(ByteString(b.toString))
     def pickle(b: Boolean, daos: DataOutputStream) = daos.writeBoolean(b)
   }
   
   implicit val floatPickler = new Pickler[Float] {
-//    def pickle(f: Float) = p(ByteString(f.toString))
     def pickle(f: Float, daos: DataOutputStream) = daos.writeFloat(f)
   }
   
   implicit val doublePickler = new Pickler[Double] {
-//    def pickle(d: Double) = p(ByteString(d.toString))
     def pickle(d: Double, daos: DataOutputStream) = daos.writeDouble(d)
   }
   
   implicit def regexPickler = new Pickler[Regex] {
-//    def pickle(r: Regex) = p(ByteString(r.toString))
     def pickle(r: Regex, daos: DataOutputStream) = daos.writeUTF(r.toString)
   }
   
   implicit def charPickler = new Pickler[Char] {
-//    def pickle(c: Char) = p(ByteString(c.toString))
     def pickle(c: Char, daos: DataOutputStream) = daos.writeChar(c)
   }
   
   implicit def filePickler = new Pickler[File] {
-//    def pickle(f: File) = p(ByteString(f.getAbsolutePath))
     def pickle(f: File, daos: DataOutputStream) = daos.writeUTF(f.getAbsolutePath)
   }
   
   implicit def optionPickler[T](implicit pickler: Pickler[T]): Pickler[Option[T]] = new Pickler[Option[T]] {
-//    def pickle(tOpt: Option[T]) = tOpt match {
-//      case Some(t) =>
-//        p(ByteString("Some") ++ pickler.pickle(t))
-//      case None =>
-//        p(ByteString("None"))
-//    }
     def pickle(tOpt: Option[T], daos: DataOutputStream) = tOpt match {
       case Some(t) =>
         daos.writeUTF("Some")
@@ -79,9 +51,6 @@ trait DefaultPicklers {
   }
   
   implicit def tuple2Pickler[T1, T2](implicit pickler1: Pickler[T1], pickler2: Pickler[T2]): Pickler[(T1, T2)] = new Pickler[(T1, T2)] {
-//    def pickle(t: (T1, T2)) = {
-//      p(pickler1.pickle(t._1) ++ pickler2.pickle(t._2))
-//    }
     def pickle(t: (T1, T2), daos: DataOutputStream) = {
       pickler1.pickle(t._1, daos)
       pickler2.pickle(t._2, daos)
@@ -89,13 +58,6 @@ trait DefaultPicklers {
   }
   
   implicit def arrayPickler[T : ClassTag](implicit elementPickler: Pickler[T]): Pickler[Array[T]] = new Pickler[Array[T]] {
-//    def pickle(arr: Array[T]): ByteString = {
-////      val encoded = ByteString(arr.map(elementPickler.pickle _).mkString)
-////      val encoded = arr.map(elementPickler.pickle _).foldLeft(ByteString.empty)(_ ++ _)
-//      val bsb = new ByteStringBuilder
-//      arr.map(elementPickler.pickle _).foreach(p => bsb.putBytes(p.toArray))
-//      p(bsb.result.compact)
-//    }
     def pickle(arr: Array[T], daos: DataOutputStream) = {
       daos.writeInt(arr.length)
       arr.foreach(x => elementPickler.pickle(x, daos))
@@ -103,11 +65,6 @@ trait DefaultPicklers {
   }
   
   implicit def seqPickler[T](implicit elementPickler: Pickler[T]): Pickler[Seq[T]] = new Pickler[Seq[T]] {
-//    def pickle(seq: Seq[T]): ByteString = {
-//      val bsb = new ByteStringBuilder
-//      seq.map(elementPickler.pickle _).foreach(p => bsb.putBytes(p.toArray))
-//      p(bsb.result.compact)
-//    }
     def pickle(seq: Seq[T], daos: DataOutputStream) = {
       daos.writeInt(seq.size)
       seq.foreach(x => elementPickler.pickle(x, daos))
@@ -115,9 +72,6 @@ trait DefaultPicklers {
   }
   
   implicit def mapPickler[K, V](implicit keyPickler: Pickler[K], valuePickler: Pickler[V]): Pickler[Map[K, V]] = new Pickler[Map[K, V]] {
-//    def pickle(m: Map[K, V]): ByteString = {
-//      seqPickler(tuple2Pickler(keyPickler, valuePickler)).pickle(m.toSeq)
-//    }
     def pickle(m: Map[K, V], daos: DataOutputStream) = {
       seqPickler(tuple2Pickler(keyPickler, valuePickler)).pickle(m.toSeq, daos)
     }
