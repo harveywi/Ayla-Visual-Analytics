@@ -36,7 +36,7 @@ case class GetContourTreeAreasRequest(username: String, vertBatches: Array[Array
       server.estimateArea(vertIndices, dataset)
     }
     
-    GetContourTreeAreasResponse(areas, dataset.dsspOutput, dataset.scalarArrayFiles)
+    GetContourTreeAreasResponse(areas, dataset.dsspOutput.isDefined, dataset.scalarArrayFiles)
   }
 }
 object GetContourTreeAreasRequest {
@@ -45,7 +45,7 @@ object GetContourTreeAreasRequest {
   PicklerRegistry2.register(picklerUnpickler[GetContourTreeAreasRequest].create())
 }
 
-case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[Array[Char]], scalarArrays: Array[File]) extends MsgFromServer {
+case class GetContourTreeAreasResponse(areas: Array[Double], projectHasDsspOutput: Boolean, scalarArrays: Array[File]) extends MsgFromServer {
   def pickled(daos: java.io.DataOutputStream) = GetContourTreeAreasResponse.pickler.pickle(this, daos)
   def clientDo(client: AylaClient, daosClient: DataOutputStream) = {
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct
@@ -71,9 +71,9 @@ case class GetContourTreeAreasResponse(areas: Array[Double], dsspOutput: Option[
     val nodeAtInfinity = client.ct.nodesContracted.maxBy(n => client.sf.getFuncVal(n.vertex))
     println("Node at infinity: " + nodeAtInfinity)
     
-    val dataset = new AylaClientCachedDataset(client, dsspOutput, scalarArrays)
+    val dataset = new AylaClientCachedDataset(client, projectHasDsspOutput, scalarArrays)
     println("Dataset:  " + dataset)
-//    
+    
     DatasetExplorer(client.ct, nodeAtInfinity, dataset)
     
     client.clientActor ! RefreshChatLogRequest(client.userName)

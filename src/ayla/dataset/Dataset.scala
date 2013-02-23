@@ -16,7 +16,10 @@ import ayla.collab.ConformationAnnotation
 trait Dataset {
   def getPDBLines(i: Int): Array[String]
   def getPDBInputStream(i: Int): InputStream
-  val dsspOutput: Option[Array[Char]]
+  val dsspProvider: Option[DsspProvider]
+//  def getDSSPLabels(i: Int): Option[Array[Char]]
+//  val dsspOutput: Option[Array[Char]]
+  
   val scalarArrays: Array[File]
   def getScalarArray(file: File): Array[Float]
   def addAnnotation(annotation: ConformationAnnotation): Unit = {}

@@ -210,7 +210,42 @@ class ConformationalSpacePanel extends BorderPanel with Reactor {
           val f2 = stateManager.morseFunction.getFuncVal(id2)
           f1 > f2
         })
+        
+        dataset.dsspProvider.foreach {dsspProvider =>
+          val w = numResidues * barWidth
+          sortedConformationIDs.foreach(id => {
+            val barLabels = dsspProvider.getDSSPLabels(numResidues, id)
+//            val barLabels = Array.fill[Char](numResidues)('X')
+//            (0 until numResidues).foreach { i =>
+//              val ofs = id * numResidues + i
+//              barLabels(i) = dsspArray(ofs)
+//            }
+            allBarLabels += barLabels
+          })
 
+          if (allBarLabels.size == 0) {
+            bgImage = GraphicsUtilities.createCompatibleImage(1, 1)
+          } else {
+            bgImage = GraphicsUtilities.createCompatibleImage(w, barHeight * allBarLabels.size)
+            val g2d = bgImage.createGraphics
+
+            g2d.setColor(ColorSchemes.scheme.bgColor)
+            g2d.fillRect(0, 0, bounds.width, bounds.height)
+            for ((barLabels, i) <- allBarLabels.zipWithIndex) {
+              val y = i * barHeight
+              for (j <- 0 until barLabels.size) {
+                val jmolSS = dsspToJmolStructure.getOrElse(barLabels(j), dsspToJmolStructure('X'))
+                val color = ColorSchemes.scheme.ssColorMap(jmolSS)
+                val x = j * barWidth
+                g2d.setColor(color)
+                g2d.fillRect(x, y, barWidth, barHeight - 1)
+              }
+            }
+          }
+          repaint()
+        }
+
+        /*
         if (dataset.dsspOutput.isDefined) {
           val dsspArray = dataset.dsspOutput.get
           val w = numResidues * barWidth
@@ -244,6 +279,7 @@ class ConformationalSpacePanel extends BorderPanel with Reactor {
           }
           repaint()
         }
+        */
       }
     }
   }

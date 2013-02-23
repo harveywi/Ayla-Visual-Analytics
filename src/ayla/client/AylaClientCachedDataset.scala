@@ -15,9 +15,18 @@ import java.io.InputStream
 import scala.util.matching.Regex
 import ayla.collab.ConformationAnnotation
 import ayla.dataset.Dataset
+import ayla.dataset.DsspProvider
 
-class AylaClientCachedDataset(val client: AylaClient, val dsspOutput: Option[Array[Char]], val scalarArrays: Array[File]) extends Dataset {
+class AylaClientCachedDataset(val client: AylaClient, val hasDsspOutput: Boolean, val scalarArrays: Array[File]) extends Dataset {
   def getPDBLines(i: Int) = client.getPDBLines(i)
+  
+  val dsspProvider = if (hasDsspOutput) {
+    Some(new DsspProvider {
+      def getDSSPLabels(numResidues: Int, id: Int): Array[Char] = client.getDSSPLabels(numResidues, id)
+    })
+  } else {
+    None
+  }
   
   def getPDBInputStream(i: Int): InputStream = {
     val pdbLines = getPDBLines(i)

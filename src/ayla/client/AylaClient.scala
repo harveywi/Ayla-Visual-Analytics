@@ -73,6 +73,9 @@ class AylaClient extends Publisher with Observing {
 
   def getPDBLines(iSampled: Int): Array[String] = requestAndReact(
     new GetPDBLinesRequest(userName, iSampled), EventStreams.pdbLines)
+    
+  def getDSSPLabels(numResidues: Int, id: Int): Array[Char] = requestAndReact(
+      new GetDsspLabelsRequest(userName, numResidues, id), EventStreams.dsspLabels)
 
   def getColorFunction(f: File): Array[Float] = requestAndReact(
     GetColorFunctionRequest(userName, f), EventStreams.colorFunction)
@@ -93,7 +96,7 @@ class AylaClient extends Publisher with Observing {
 
   object EventStreams {
     val pdbLines = new EventSource[Array[String]]
-    val dsspOutput = new EventSource[Option[Array[Char]]]
+    val dsspLabels = new EventSource[Array[Char]]
     val colorFunctions = new EventSource[Array[File]]
     val colorFunction = new EventSource[Array[Float]]
     val matchingConformations = new EventSource[Array[(String, Int)]]

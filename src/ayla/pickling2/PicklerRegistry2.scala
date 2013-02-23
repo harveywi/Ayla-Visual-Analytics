@@ -4,6 +4,7 @@ import scala.collection._
 import ayla.protocol._
 import scala.reflect.runtime._
 import java.io.DataInputStream
+import language.reflectiveCalls
 
 object PicklerRegistry2 {
 	private[this] val picklers = new mutable.ArrayBuffer[Pickler[_]] with mutable.SynchronizedBuffer[Pickler[_]]

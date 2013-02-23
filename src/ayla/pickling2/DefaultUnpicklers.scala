@@ -2,6 +2,7 @@ package ayla.pickling2
 
 import scala.util.matching.Regex
 import java.io.{File, DataInputStream}
+import scala.reflect.ClassTag
 
 trait DefaultUnpicklers {
   
@@ -67,7 +68,7 @@ trait DefaultUnpicklers {
 	  }
 	}
 	
-	implicit def arrayUnpickler[T](implicit m: ClassManifest[T], elementUnpickler: Unpickler[T]): Unpickler[Array[T]] = new Unpickler[Array[T]] {
+	implicit def arrayUnpickler[T](implicit m: ClassTag[T], elementUnpickler: Unpickler[T]): Unpickler[Array[T]] = new Unpickler[Array[T]] {
 	  def unpickle(dais: DataInputStream) = {
 	    val n = dais.readInt
 	    (for (_ <- 1 to n) yield elementUnpickler.unpickle(dais)).toArray
