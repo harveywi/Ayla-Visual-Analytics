@@ -48,7 +48,7 @@ object PointCloudMaker {
     }
   }
 
-  def makePointCloud(datasetDir: File, pdbProvider: PdbStreamProvider): Unit = {
+  def makePointCloud(datasetDir: File, pdbProvider: PdbStreamProvider): Unit = Timing("Making point cloud") {
     val pcaSampleSize = math.min(pdbProvider.size, 3000)
     val sampleIndices = Range(0, pdbProvider.size).map((_, math.random)).sorted.map(_._1).take(pcaSampleSize)
 

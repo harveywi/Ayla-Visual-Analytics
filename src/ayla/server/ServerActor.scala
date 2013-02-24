@@ -22,12 +22,15 @@ class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
   val inBuff = new BufferedInputStream(socket.getInputStream)
   val in = new DataInputStream(inBuff)
   val socketReaderActor = context.system.actorOf(Props(new SocketReaderActor(this.self, in, inBuff)))
+  
+  var userName: String = ""
 
   // TODO handle SocketDead message
   def receive = {
     case className: String if !className.isEmpty=>
       PicklerRegistry2.unpickle(className, in) match {
         case m: ClientConnectRequest =>
+          userName = m.username
           socketReaderActor ! ListenToSocket
           println(s"Associating user name ${m.username} with an actor.")
           aylaServer.usernameToServerActor(m.username) = self
@@ -41,6 +44,13 @@ class ServerActor(aylaServer: AylaServer, socket: Socket) extends Actor {
     case m: MsgFromClient => 
       println("Server received message from client:  " + m)
       m.serverDo(aylaServer, out)
+    
+    case SocketDead =>
+      println("The socket is dead")
+      // Unregister the user name and kill this actor
+      aylaServer.unregisterUser(userName)
+      self ! PoisonPill
+      
     case x @ _ => println("Server received weird message:  " + x)
   }
 }

@@ -254,9 +254,11 @@ object DatasetExplorer extends SimpleSwingApplication {
     val col2 = new Leaf("col2")
     col2.setWeight(1.0 / 4.0)
     val col3 = new Leaf("col3")
-    col3.setWeight(1.0 / 4.0)
+    col3.setWeight(0.01)
+//    col3.setWeight(1.0 / 4.0)
     val col4 = new Leaf("col4")
-    col4.setWeight(1.0 / 4.0)
+    col4.setWeight(.99)
+//    col4.setWeight(1.0 / 4.0)
 
     val modelRoot = new Split
     modelRoot.setChildren(Arrays.asList(col3, div_3_4, col4))

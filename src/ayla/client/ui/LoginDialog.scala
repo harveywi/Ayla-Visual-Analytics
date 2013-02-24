@@ -18,9 +18,21 @@ import ayla.client.ui.state.UIState
 import java.net.Socket
 import java.net.InetAddress
 import java.net.ConnectException
+import ayla.client.ui.event.ColorSchemeChanged
 
 class LoginDialog extends Dialog with ColorSchemed {
   var result: Option[LoginInfo] = None
+
+  private[this] val colorSchemeComboBox = new ComboBox(Seq("Dark", "Light")) with ColorSchemed {
+    reactions += {
+      case e: SelectionChanged => selection.item match {
+        case "Dark" =>
+          UIState.colorScheme = ColorSchemes.dark
+        case "Light" =>
+          UIState.colorScheme = ColorSchemes.light
+      }
+    }
+  }
 
   title = "Connect to Ayla Server"
   modal = true
@@ -43,7 +55,7 @@ class LoginDialog extends Dialog with ColorSchemed {
 
   private[this] val serverTextField = makeTextField(prefs.get("servername", "thor.cse.ohio-state.edu"))
   private[this] val usernameTextField = makeTextField(prefs.get("username", "[your username]"))
-  private[this] val cacheDirTextField = makeTextField(prefs.get("cacheDir", new File(".").getAbsolutePath))
+  //  private[this] val cacheDirTextField = makeTextField(prefs.get("cacheDir", new File(".").getAbsolutePath))
   private[this] val connectButton = new Button("Connect") with ColorSchemed {
     focusable = true
 
@@ -51,29 +63,14 @@ class LoginDialog extends Dialog with ColorSchemed {
       case e: ButtonClicked =>
         prefs.put("servername", serverTextField.text)
         prefs.put("username", usernameTextField.text)
-        prefs.put("cacheDir", cacheDirTextField.text)
 
         // Make sure internet address/socket is reachable
         try {
           val ia = InetAddress.getByName(serverTextField.text)
           val socket = new Socket(ia, 9010)
 
-          // Make sure cache directory exists
-          val cacheDir = new File(cacheDirTextField.text)
-          if (!cacheDir.exists) {
-            Dialog.showConfirmation(null, "The specified cache directory does not exist.  Would you like me to create it?", "Cache Directory Not Found") match {
-              case Dialog.Result.Yes =>
-                cacheDir.mkdirs()
-                result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir, socket))
-                close()
-
-              case Dialog.Result.No => /* Do nothing */
-            }
-          } else {
-            // Cache found
-            result = Some(LoginInfo(serverTextField.text, usernameTextField.text, cacheDir, socket))
-            close()
-          }
+          result = Some(LoginInfo(serverTextField.text, usernameTextField.text, socket))
+          close()
         } catch {
           case e: ConnectException =>
             Dialog.showMessage(message = s"Unable to connect to server ${serverTextField.text} on port 9010.", title = "Connection Refused")
@@ -106,16 +103,16 @@ class LoginDialog extends Dialog with ColorSchemed {
     c.gridx = 1
     layout(usernameTextField) = c
 
-    val lblCacheDir = makeLabel("Cache Directory:  ")
+//    val lblColorScheme = makeLabel("Color scheme:  ")
+//    c.gridx = 0
+//    c.gridy = 2
+//    layout(lblColorScheme) = c
+//
+//    c.gridx = 1
+//    layout(colorSchemeComboBox) = c
+
     c.gridx = 0
     c.gridy = 2
-    layout(lblCacheDir) = c
-
-    c.gridx = 1
-    layout(cacheDirTextField) = c
-
-    c.gridx = 0
-    c.gridy = 3
     c.gridwidth = 2
     c.fill = GridBagPanel.Fill.None
     layout(connectButton) = c
@@ -126,7 +123,7 @@ class LoginDialog extends Dialog with ColorSchemed {
 
 }
 
-case class LoginInfo(val server: String, val username: String, val cacheDir: File, val socket: Socket)
+case class LoginInfo(val server: String, val username: String, val socket: Socket)
 
 object LoginDialog {
   def main(args: Array[String]): Unit = {

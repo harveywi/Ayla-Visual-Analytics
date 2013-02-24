@@ -32,6 +32,8 @@ import ayla.pickling2.DefaultUnpicklers._
 import ayla.pickling2.PicklerRegistry2
 import ayla.pickling2.Picklable
 import ayla.pickling2.Pickler
+import scala.collection.mutable.SynchronizedSet
+import scala.collection.mutable.SynchronizedMap
 
 case class ProjInfo(datasetName: String, projName: String, sfName: String) extends Picklable{
 	def pickled(daos: java.io.DataOutputStream) = ProjInfo.pickler.pickle(this, daos)
@@ -80,8 +82,8 @@ class AylaServer(val datasetsRootDir: File) {
 
   // Mutable state junk
   // TODO this should be synchronized
-  val userSessions = new mutable.HashSet[UserSession]
-  val usernameToServerActor = new mutable.HashMap[String, ActorRef]
+  val userSessions = new mutable.HashSet[UserSession] with SynchronizedSet[UserSession]
+  val usernameToServerActor = new mutable.HashMap[String, ActorRef] with SynchronizedMap[String, ActorRef]
 
   val annotationMap: mutable.HashMap[ProjInfo, mutable.ArrayBuffer[ConformationAnnotation]] = {
     val annotationFile = new File(datasetsRootDir, "annotations.dat")
@@ -144,6 +146,12 @@ class AylaServer(val datasetsRootDir: File) {
     val scalarFunctionsFile = new File(datasetDir, "scalar_functions")
     datasetDir.getName -> scalarFunctionsFile.listFiles.map(_.getName)
   }).toMap
+  
+  def unregisterUser(userName: String): Unit = {
+    println("Unregistering user " + userName)
+    userSessions.find(_.username == userName).map(userSessions.remove)
+    usernameToServerActor.remove(userName)
+  }
 
   def logAnnotation(username: String, annotation: ConformationAnnotation) = annotationMap.synchronized {
     userSessions.find(_.username == username) match {

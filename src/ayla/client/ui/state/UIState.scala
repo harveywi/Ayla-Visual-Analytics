@@ -15,7 +15,7 @@ import ayla.client.ui.event.ColorSchemeChanged
 
 object UIState extends Publisher {
   
-  private[this] var _colorScheme = ColorScheme.dark
+  private[this] var _colorScheme = ColorScheme.light
   def colorScheme = _colorScheme
   def colorScheme_= (scheme: ColorScheme) = {
     _colorScheme = scheme

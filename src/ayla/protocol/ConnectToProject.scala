@@ -93,6 +93,7 @@ case class ConnectToProjectResponse(proj: CollaborationProject) extends MsgFromS
   def pickled(daos: java.io.DataOutputStream) = ConnectToProjectResponse.pickler.pickle(this, daos)
   def clientDo(client: AylaClient, daosClient: DataOutputStream) = replyWith(daosClient) {
     client.ct = ContourTree(proj.sf).simplify(65)
+//    client.ct = ContourTree(proj.sf).simplify(40)
     client.sf = proj.sf
     println("Preparing to calculate contour tree edge areas")
     val edges = client.ct.criticalNodeToIncidentEdges.values.flatten.toArray.distinct

@@ -10,10 +10,11 @@
 package ayla.client.ui
 
 import java.awt.Color
+import ayla.client.ui.state.UIState
 
 object ColorSchemes {
-  class ColorScheme(val lineColor: Color, val ssColorMap: Map[String, Color], val bgColor: Color, val btnForeground: Color, val btnBackground: Color)
-  private val dark = new ColorScheme(
+//  class ColorScheme(val lineColor: Color, val ssColorMap: Map[String, Color], val bgColor: Color, val btnForeground: Color, val btnBackground: Color)
+  val dark = new ColorScheme("Dark",
     lineColor = new Color(100, 100, 140),
     ssColorMap = Map(
       "structure=-1" -> new Color(40, 40, 40), // non-protein parts (ligands)
@@ -27,7 +28,7 @@ object ColorSchemes {
     btnForeground = new Color(177, 186, 217),
     btnBackground = new Color(10, 10, 10))
 
-  private val light = new ColorScheme(
+  val light = new ColorScheme("Light",
     lineColor = new Color(100, 100, 140),
     ssColorMap = Map(
       "structure=-1" -> new Color(40, 40, 40), // non-protein parts (ligands)
@@ -41,5 +42,9 @@ object ColorSchemes {
     btnForeground = new Color(10, 10, 10),
     btnBackground = new Color(177, 186, 217))
 
-  val scheme = dark
+//  var scheme = dark
+//  private[this] var _scheme = dark
+  
+  def scheme = UIState.colorScheme
+  
 }

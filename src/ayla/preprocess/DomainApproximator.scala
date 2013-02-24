@@ -101,7 +101,6 @@ object DomainApproximator {
     } yield {
       (filter, k, datasetDir, outputFile)
     }
-    ???
   }
 
   def buildDomain(filter: Filter, k: Int, datasetDir: File, outputFile: File) = {
