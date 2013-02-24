@@ -20,22 +20,11 @@ h2. Prerequisites
 
 h3. Install Java 6+
 
-The software is written in "Scala":http://www.scala-lang.org and "Oracle Java
-Version 6+":http://www.oracle.com/technetwork/java/javase/downloads/index.html
-must be installed to run the binaries.  Processing large datasets (on the
-order of hundreds of thousands of protein conformations) can be
-memory-intensive; hence we recommend running the software on a machine with 8
-GB of RAM or more.  (As the software matures, it will become faster and
-leaner.)
+The software is written in "Scala":http://www.scala-lang.org and "Oracle Java Version 6+":http://www.oracle.com/technetwork/java/javase/downloads/index.html must be installed to run the binaries.  Processing large datasets (on the order of hundreds of thousands of protein conformations) can be memory-intensive; hence we recommend running the software on a machine with 8 GB of RAM or more.  (As the software matures, it will become faster and leaner.)
 
 h3. Install Java 3D
 
-The software uses <a
-href="http://www.oracle.com/technetwork/java/javase/tech/index-jsp-138252.html">Java
-3D</a> to render topological landscapes.  Before you can use the software you
-will need to <a
-href="http://www.oracle.com/technetwork/java/javase/tech/index-jsp-138252.html">download
-and install</a> Java 3D 1.5.1.
+The software uses "Java 3D":http://www.oracle.com/technetwork/java/javase/tech/index-jsp-138252.html to render topological landscapes.  Before you can use the software you will need to "download and install":http://www.oracle.com/technetwork/java/javase/tech/index-jsp-138252.html Java 3D 1.5.1.
 
 h3. Firewall Configuration
 
