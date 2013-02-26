@@ -448,10 +448,10 @@ object ContourTree {
     updateTree: (JSTreeNode, JSTreeNode) => Unit) = {
 
     // Sort the tree nodes
-    //Sorting.stableSort(nodes, compareNodes)
-    java.util.Arrays.sort(nodes, new java.util.Comparator[JSTreeNode] {
-      override def compare(n1: JSTreeNode, n2: JSTreeNode) = if (compareNodes(n1, n2)) 0 else 1
-    })
+    Sorting.stableSort(nodes, compareNodes)
+//    java.util.Arrays.sort(nodes, new java.util.Comparator[JSTreeNode] {
+//      override def compare(n1: JSTreeNode, n2: JSTreeNode) = if (compareNodes(n1, n2)) 0 else 1
+//    })
 
     val uf = new UnionFind(nodes.size)
     val lowest = new Array[JSTreeNode](nodes.size)
